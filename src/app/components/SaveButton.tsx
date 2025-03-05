@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Loader2, Check, FileSpreadsheet, Upload, Sparkles, FileUp, FolderOpen, File } from "lucide-react"
 import confetti from "canvas-confetti"
@@ -127,23 +127,28 @@ export default function SaveButton() {
                 <FileSpreadsheet className="w-8 h-8 text-blue-400" />
               </div>
               <h4 className="text-3xl font-semibold bg-gradient-to-r from-gray-100 to-gray-400 bg-clip-text text-transparent tracking-tight">
-                Upload latest package
+                CC Package Export
               </h4>
               <p className="text-xs text-gray-400 flex items-center justify-center gap-2 tracking-wide">
                 Please upload the latest package
               </p>
             </div>
 
-            <div className="flex flex-col gap-6">
-              <div className="flex items-center space-x-2">
+            <div className="flex flex-col gap-6 mt-4">
+              <div className="flex items-center space-x-3 bg-gray-800/30 backdrop-blur-sm px-4 py-3 rounded-lg border border-gray-700/50">
                 <Checkbox
                   id="exportFormat"
                   checked={exportInXlsx}
                   onCheckedChange={(checked) => setExportInXlsx(checked as boolean)}
+                  className="border-gray-500 data-[state=checked]:bg-gray-50 data-[state=checked]:text-gray-900 cursor-pointer"
                 />
-                <Label htmlFor="exportFormat">Export for iField (in CSV format)</Label>
+                <Label 
+                  htmlFor="exportFormat" 
+                  className="text-gray-100 font-medium select-none cursor-pointer"
+                >
+                  Export for iField (CSV)
+                </Label>
               </div>
-
 
               <div className="relative w-full flex justify-center mt-4 gap-4">
                 <motion.button
