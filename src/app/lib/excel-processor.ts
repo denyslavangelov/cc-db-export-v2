@@ -271,6 +271,26 @@ function getContainerCodes(containerData: any[], categoryCode: string): string[]
   return codes;
 }
 
+function createImagesList(brandList: string[]): any[] {
+  const rows: any[] = [];
+  
+  for (const line of brandList) {
+    const match = line.match(/_(\d+)\s*"([^"]+)"/);
+    if (match) {
+      const objectName = match[1];
+      const brandName = match[2];
+      rows.push({
+        'Text': `{#RESOURCE:_${objectName}.jpg#}<br/>${brandName}`
+      });
+    }
+  }
+
+  return rows.map((row, index) => ({
+    'Position': index + 1,
+    ...row
+  }));
+}
+
 async function generateExportFiles(data: ProcessedData, countryName: string, isoCode: string, exportInXlsx: boolean): Promise<void> {
   const zip = new JSZip();
   
@@ -279,7 +299,7 @@ async function generateExportFiles(data: ProcessedData, countryName: string, iso
     { name: `MAIN_BRANDLIST_${isoCode}.txt`, content: data.mainBrandList },
     { name: `DIARY_BRANDLIST_${isoCode}.txt`, content: data.diaryBrandList },
     { name: `EQUITY_BRANDLIST_${isoCode}.txt`, content: data.equityBrandList },
-    { name: `IMAGERY_BRANDLIST_${isoCode}.txt`, content: data.imageryList },
+    { name: `IMAGERY_LIST_${isoCode}.txt`, content: data.imageryList },
     { name: `DIARY_CATEGORIES_${isoCode}.txt`, content: data.diaryCategories },
     { name: `ALL_LISTS_${isoCode}.txt`, content: [...data.mainBrandList, "", ...data.diaryBrandList, "", 
       ...data.equityBrandList, "", ...data.imageryList, "", ...data.diaryCategories] }
@@ -309,6 +329,22 @@ async function generateExportFiles(data: ProcessedData, countryName: string, iso
     }
   ];
 
+  // Add image list Excel files
+  if (exportInXlsx) {
+    excelFiles.push(
+      {
+        name: `MAIN_BRANDLIST_IMAGES_${isoCode}.xlsx`,
+        sheetName: 'Main Brand List Images',
+        data: createImagesList(data.mainBrandList)
+      },
+      {
+        name: `DIARY_BRANDLIST_IMAGES_${isoCode}.xlsx`,
+        sheetName: 'Diary Brand List Images',
+        data: createImagesList(data.diaryBrandList)
+      }
+    );
+  }
+
   // Add text files to zip
   if (!exportInXlsx) {
     files.forEach(file => {
@@ -319,7 +355,9 @@ async function generateExportFiles(data: ProcessedData, countryName: string, iso
   // Add Excel files to zip if exportInXlsx is true
   if (exportInXlsx) {
     for (const file of excelFiles) {
-      const excelData = convertToExcelFormat(parseListToExcelRows(file.data));
+      const excelData = file.name.includes('_IMAGES_') 
+        ? file.data // Use the already formatted image list data
+        : convertToExcelFormat(parseListToExcelRows(file.data));
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.json_to_sheet(excelData);
       XLSX.utils.book_append_sheet(wb, ws, file.sheetName);
