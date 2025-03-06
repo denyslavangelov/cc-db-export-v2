@@ -35,7 +35,7 @@ export async function processExcelFile(file: File, exportInXlsx: boolean = false
   const indexSheet = data.INDEX[4]; // Row 10 (0-based)
   const countryName = indexSheet?.D; // Column D
   const isoCode = COUNTRY_CODES[countryName];
-  
+
   if (!isoCode) {
     throw new Error('Country not recognized');
   }
@@ -63,8 +63,8 @@ async function readExcelFile(file: File): Promise<ExcelData> {
           });
 
           if (skipRows) {
-            const headers = jsonData[8]; // Save the header row (8th row, 0-based index)
-            const dataRows = jsonData.slice(9); // Remove first 8 rows
+            const headers = jsonData[7]; // Save the header row (8th row, 0-based index)
+            const dataRows = jsonData.slice(8); // Remove first 8 rows
             return [headers, ...dataRows]; // Put header row back at the start
           }
           return jsonData;
@@ -191,6 +191,7 @@ function formatDataList(data: any[], listName: string, codeCol: number, category
     }
   }
 
+debugger;
   if (entries.length === 0) {
     throw new Error("No valid entries found in data");
   }
@@ -347,7 +348,7 @@ async function generateExportFiles(data: ProcessedData, countryName: string, iso
 
   // Add text files to zip
   if (!exportInXlsx) {
-    files.forEach(file => {
+  files.forEach(file => {
       zip.file(file.name, file.content.join('\n'));
     });
   }
@@ -596,4 +597,4 @@ function convertToExcelFormat(rows: any[]): any[] {
   );
 
   return uniqueRows.sort((a, b) => a['Position'] - b['Position']);
-}
+} 
