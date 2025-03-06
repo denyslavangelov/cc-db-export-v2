@@ -22,6 +22,14 @@ const COUNTRY_CODES: CountryCodes = {
   "Greece": "GR",
 };
 
+interface DiaryCategory {
+  text: string;
+  objectName: string;
+  groupId?: string;
+  isHeader: boolean;
+  containerCodes?: string;
+}
+
 export async function processExcelFile(file: File, exportInXlsx: boolean = false): Promise<void> {
   const data = await readExcelFile(file);
   const indexSheet = data.INDEX[4]; // Row 10 (0-based)
@@ -183,6 +191,10 @@ function formatDataList(data: any[], listName: string, codeCol: number, category
     }
   }
 
+  if (entries.length === 0) {
+    throw new Error("No valid entries found in data");
+  }
+
   result.push(...entries.map((entry, i) => entry + (i < entries.length - 1 ? "," : "")));
   result.push("};");
   return result;
@@ -289,6 +301,11 @@ async function generateExportFiles(data: ProcessedData, countryName: string, iso
       name: `EQUITY_BRANDLIST_${isoCode}.xlsx`,
       sheetName: 'Equity Brand List',
       data: data.equityBrandList
+    },
+    {
+      name: `DIARY_CATEGORIES_${isoCode}.xlsx`,
+      sheetName: 'Diary Categories',
+      data: data.diaryCategories
     }
   ];
 
@@ -321,6 +338,11 @@ function parseListToExcelRows(list: string[]): any[] {
   const rows: any[] = [];
   let currentObject: any = {};
 
+  // Special handling for DIARY_CATEGORIES
+  if (list.length > 0 && list[0].includes('DIARY_CATEGORIES_')) {
+    return parseDiaryCategories(list);
+  }
+
   // Match pattern: _123 "Text" [ CategoryCode = "{_720}" ]
   const pattern = /_(\d+)\s*"([^"]+)"\s*\[\s*CategoryCode\s*=\s*"\{([^}]+)\}"\s*\]/;
 
@@ -349,11 +371,191 @@ function parseListToExcelRows(list: string[]): any[] {
   return rows;
 }
 
+function parseDiaryCategories(list: string[]): any[] {
+  const rows: any[] = [];
+  let currentHeader: { id: string; text: string } | null = null;
+  let inBlock = false;
+  let currentItem = '';
+  
+  // Define default values for all columns
+  const defaultValues = {
+    'Measure': '',
+    'Answers Reference': '',
+    'Fixed To Position': '0',
+    'Exclusive': '0',
+    'Display Order': '',
+    'SPSS Code': '',
+    'Is Other': '0',
+    'Other field Object Name': '',
+    'Text Field Type': '',
+    'Data Type': '',
+    'Placeholder': '',
+    'Precision/Length': '',
+    'Scale': '',
+    'Minimum Text Length': '',
+    'Maximum Text Length': '',
+    'Minimum Value': '',
+    'Maximum Value': '',
+    'Text Content Rule': '',
+    'Range Expression': '',
+    'Regular Expression': '',
+    'Visualization': '',
+    'Data Classification': '0',
+    'Other field Extended Properties': '{}'
+  };
+
+  for (let i = 0; i < list.length; i++) {
+    const line = list[i].trim();
+  
+    // Skip empty lines
+    if (!line) {
+      continue;
+    }
+  
+    // Handle block structure
+    if (line === '{') {
+      inBlock = true;
+      currentItem = '';
+      continue;
+    }
+    
+    if (line === '},') {
+      inBlock = false;
+      if (currentHeader && currentItem) {
+        // Split items by "],," or "]," to handle multiple items
+        const items = currentItem.split(/\],+/).filter(item => item.trim());
+        
+        for (const item of items) {
+          // Match all three parts: code, label, and container codes
+          const subItemMatch = item.match(/^\s*_(\d+)\s*"([^"]+)"\s*\[\s*ContainersCodes\s*=\s*"\{([^}]+)\}"/);
+          
+          if (subItemMatch) {
+            rows.push({
+              'Text': subItemMatch[2],
+              'Object Name': `_${subItemMatch[1]}`,
+              'Group ID': '', // Temporary empty value, will be filled later
+              'Display As Header': '0',
+              'No Filter': '0',
+              'Extended Properties': JSON.stringify({
+                ContainersCodes: subItemMatch[3]
+              }),
+              ...defaultValues
+            });
+          }
+        }
+      }
+      currentHeader = null;
+      currentItem = '';
+      continue;
+    }
+  
+    if (line === 'define' || line === '};' || line === '],' || line === '}') {
+      continue;
+    }
+  
+    // Match header pattern: _100 "Sparkling (fizzy) soft drink"
+    const headerMatch = line.match(/^_(\d+)\s*"([^"]+)"$/);
+    if (headerMatch && !line.includes('ContainersCodes')) {
+      const headerId = headerMatch[1];
+      const headerText = headerMatch[2];
+      currentHeader = {
+        id: headerId,
+        text: headerText
+      };
+  
+      // Special handling for Alcoholic drinks and alternatives
+      const isAlcoholic = headerId === '900' || headerId === '1100';
+  
+      // Add header row
+      rows.push({
+        'Text': headerText,
+        'Object Name': `_${headerId}`,
+        'Group ID': '',
+        'Display As Header': '1',
+        'No Filter': isAlcoholic ? '0' : '1',
+        'Extended Properties': '{}',
+        ...defaultValues
+      });
+      continue;
+    }
+  
+    // Accumulate sub-items
+    if (inBlock) {
+      currentItem += line.trim() + ' ';
+    }
+  }
+  
+  // First pass: Add positions and track header positions
+  const headerPositions = new Map<string, number>();
+  const rowsWithPositions = rows.map((row, index) => {
+    const position = index + 1;
+    if (row['Display As Header'] === '1') {
+      headerPositions.set(row['Object Name'], position);
+    }
+    return {
+      'Position': position,
+      ...row
+    };
+  });
+  
+  // Second pass: Update Group IDs based on header positions
+  const processedRows = rowsWithPositions.map(row => {
+    if (row['Display As Header'] === '0') {
+      // Get the first 2-4 digits of the Object Name to match with header
+      const objectNumber = parseInt(row['Object Name'].substring(1));
+      const headerNumber = Math.floor(objectNumber / 100) * 100;
+      const headerPrefix = `_${headerNumber}`;
+      const headerPosition = headerPositions.get(headerPrefix);
+      return {
+        ...row,
+        'Group ID': headerPosition ? headerPosition.toString() : ''
+      };
+    }
+    return row;
+  });
+
+  // Add the "Other (specify)" row at the end
+  processedRows.push({
+    'Position': processedRows.length + 1,
+    'Text': 'Other (specify)',
+    'Object Name': '_1004',
+    'Measure': '',
+    'Group ID': '61',
+    'Answers Reference': '',
+    'Display As Header': '0',
+    'Fixed To Position': '0',
+    'Exclusive': '0',
+    'No Filter': '0',
+    'Display Order': '',
+    'SPSS Code': '',
+    'Extended Properties': '{"ContainersCode":""}',
+    'Is Other': '1',
+    'Other field Object Name': '_1004',
+    'Text Field Type': '2',
+    'Data Type': '3',
+    'Placeholder': '',
+    'Precision/Length': '4000',
+    'Scale': '0',
+    'Minimum Text Length': '',
+    'Maximum Text Length': '',
+    'Minimum Value': '',
+    'Maximum Value': '',
+    'Text Content Rule': '',
+    'Range Expression': '',
+    'Regular Expression': '',
+    'Visualization': '1',
+    'Data Classification': '0',
+    'Other field Extended Properties': '{}'
+  });
+
+  return processedRows;
+}
+
 function convertToExcelFormat(rows: any[]): any[] {
-  // Remove any duplicate rows based on Object Name
+  // Remove duplicates based on Object Name
   const uniqueRows = rows.filter((row, index, self) =>
     index === self.findIndex((r) => r['Object Name'] === row['Object Name'])
   );
 
-  return uniqueRows.sort((a, b) => a['Object Name'].localeCompare(b['Object Name']));
+  return uniqueRows.sort((a, b) => a['Position'] - b['Position']);
 }
