@@ -281,14 +281,16 @@ function createImagesList(brandList: string[]): any[] {
       const objectName = match[1];
       const brandName = match[2];
       rows.push({
-        'Text': `{#RESOURCE:_${objectName}.jpg#}<br/>${brandName}`
+        'Position': 0, // Will be updated with index + 1 below
+        'Text': `{#RESOURCE:_${objectName}.jpg#}<br/>${brandName}`,
+        'Object Name': `_${objectName}`
       });
     }
   }
 
   return rows.map((row, index) => ({
-    'Position': index + 1,
-    ...row
+    ...row,
+    'Position': index + 1
   }));
 }
 
@@ -327,6 +329,11 @@ async function generateExportFiles(data: ProcessedData, countryName: string, iso
       name: `DIARY_CATEGORIES_${isoCode}.xlsx`,
       sheetName: 'Diary Categories',
       data: data.diaryCategories
+    },
+    {
+      name: `IMAGERY_LIST_${isoCode}.xlsx`,
+      sheetName: 'Imagery List',
+      data: data.imageryList
     }
   ];
 
@@ -342,6 +349,11 @@ async function generateExportFiles(data: ProcessedData, countryName: string, iso
         name: `DIARY_BRANDLIST_IMAGES_${isoCode}.xlsx`,
         sheetName: 'Diary Brand List Images',
         data: createImagesList(data.diaryBrandList)
+      },
+      {
+        name: `EQUITY_BRANDLIST_IMAGES_${isoCode}.xlsx`,
+        sheetName: 'Equity Brand List Images',
+        data: createImagesList(data.equityBrandList)
       }
     );
   }
