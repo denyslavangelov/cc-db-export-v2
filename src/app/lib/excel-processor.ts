@@ -95,7 +95,7 @@ function processSheets(data: ExcelData, isoCode: string): ProcessedData {
     diaryBrandList: processDiaryBrandList(data.DIARY_BRAND_LIST, isoCode),
     equityBrandList: processEquityBrandList(data.MAIN_BRAND_LIST, isoCode),
     imageryList: processImageryList(data.IMAGERY, isoCode),
-    diaryCategories: processDiaryCategories(data.SUB_CATEGORY_LIST, data.CONTAINERS, isoCode),
+    diaryCategories: processDiaryCategories(data.SUB_CATEGORY_LIST, data.CONTAINERS),
     fullList: [] // This will be populated after processing all other lists
   };
 }
@@ -116,8 +116,8 @@ function processImageryList(data: any[], isoCode: string): string[] {
   return formatDataList(data, `IMAGERY_BRANDLIST_${isoCode}`, 4, 5, true);
 }
 
-function processDiaryCategories(categoryData: any[], containerData: any[], isoCode: string): string[] {
-  const result = [`DIARY_CATEGORIES_${isoCode} "" define`, "{"];
+function processDiaryCategories(categoryData: any[], containerData: any[]): string[] {
+  const result = [`DIARY_CATEGORIES"" define`, "{"];
   const headers = new Map<string, { label: string, categories: string[] }>();
   const localCategories: string[] = [];
 

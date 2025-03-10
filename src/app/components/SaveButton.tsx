@@ -70,27 +70,44 @@ export default function SaveButton() {
       backgroundColor: "rgb(17, 24, 39)",
       color: "white",
       scale: 1,
+      transition: { duration: 0.2 }
     },
     saving: {
       backgroundColor: "rgb(59, 130, 246)",
       color: "white",
       scale: 1,
+      transition: { duration: 0.2 }
     },
     saved: {
       backgroundColor: "rgb(34, 197, 94)",
       color: "white",
-      scale: [1, 1.1, 1],
+      scale: [1, 1.05, 1],
       transition: {
-        duration: 0.2,
+        duration: 0.3,
         times: [0, 0.5, 1],
+        ease: "easeInOut"
       },
     },
   }
 
   const sparkleVariants = {
     initial: { opacity: 0, scale: 0 },
-    animate: { opacity: 1, scale: 1 },
-    exit: { opacity: 0, scale: 0 },
+    animate: { 
+      opacity: 1, 
+      scale: 1,
+      transition: {
+        duration: 0.2,
+        ease: "easeOut"
+      }
+    },
+    exit: { 
+      opacity: 0, 
+      scale: 0,
+      transition: {
+        duration: 0.2,
+        ease: "easeIn"
+      }
+    },
   }
 
   return (
@@ -126,7 +143,7 @@ export default function SaveButton() {
               <div className="flex items-center justify-center gap-2 mb-4">
                 <FileSpreadsheet className="w-8 h-8 text-blue-400" />
               </div>
-              <h4 className="text-3xl font-semibold bg-gradient-to-r from-gray-100 to-gray-400 bg-clip-text text-transparent tracking-tight">
+              <h4 className="text-3xl font-semibold text-gray-100 tracking-tight">
                 CC Package Export
               </h4>
               <p className="text-xs text-gray-400 flex items-center justify-center gap-2 tracking-wide">
@@ -135,7 +152,7 @@ export default function SaveButton() {
             </div>
 
             <div className="flex flex-col gap-6 mt-4">
-              <div className="flex items-center space-x-3 bg-gray-800/30 backdrop-blur-sm px-4 py-3 rounded-lg border border-gray-700/50">
+              <div className="flex items-center space-x-3 bg-gray-800 bg-opacity-30 px-4 py-3 rounded-lg border border-gray-700/50">
                 <Checkbox
                   id="exportFormat"
                   checked={exportInXlsx}
@@ -158,27 +175,26 @@ export default function SaveButton() {
                   className={cn(
                     "group relative grid overflow-hidden rounded-full px-6 py-2 transition-all duration-200 cursor-pointer",
                     "hover:shadow-lg",
+                    "bg-gray-900 hover:bg-gray-800"
                   )}
                   style={{ minWidth: "150px" }}
                   whileHover={status === "idle" ? { scale: 1.05 } : {}}
                   whileTap={status === "idle" ? { scale: 0.95 } : {}}
                 >
                   {status === "idle" && (
-                    <span>
-                      <span
-                        className={cn(
-                          "spark mask-gradient absolute inset-0 h-[100%] w-[100%] animate-flip overflow-hidden rounded-full",
-                          "[mask:linear-gradient(white,_transparent_50%)] before:absolute before:aspect-square before:w-[200%] before:bg-[conic-gradient(from_0deg,transparent_0_340deg,white_360deg)]",
-                          "before:rotate-[-90deg] before:animate-rotate",
-                          "before:content-[''] before:[inset:0_auto_auto_50%] before:[translate:-50%_-15%]",
-                        )}
-                      />
-                    </span>
+                    <span
+                      className={cn(
+                        "spark mask-gradient absolute inset-0 h-[100%] w-[100%] animate-flip overflow-hidden rounded-full",
+                        "[mask:linear-gradient(white,_transparent_50%)] before:absolute before:aspect-square before:w-[200%] before:bg-[conic-gradient(from_0deg,transparent_0_340deg,white_360deg)]",
+                        "before:rotate-[-90deg] before:animate-rotate",
+                        "before:content-[''] before:[inset:0_auto_auto_50%] before:[translate:-50%_-15%]",
+                      )}
+                    />
                   )}
                   <span
                     className={cn(
                       "backdrop absolute inset-px rounded-[22px] transition-colors duration-200",
-                      status === "idle" ? "bg-gray-950 group-hover:bg-gray-900" : "",
+                      status === "idle" ? "bg-gray-900/90 group-hover:bg-gray-800/90" : "",
                     )}
                   />
                   <span className="z-10 flex items-center justify-center gap-2 text-sm font-medium text-gray-200">
