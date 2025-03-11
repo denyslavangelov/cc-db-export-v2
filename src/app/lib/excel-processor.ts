@@ -20,8 +20,8 @@ const COUNTRY_CODES: CountryCodes = {
   "Serbia": "SB",
   "Bulgaria": "BG",
   "KENYA": "KE",
-  "Greece": "GR"
-  // "Uzbekistan": "UZ"
+  "Greece": "GR",
+  "Uzbekistan": "UZ"
 };
 
 interface DiaryCategory {
