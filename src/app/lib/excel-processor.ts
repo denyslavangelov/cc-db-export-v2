@@ -182,13 +182,18 @@ function processDiaryCategories(categoryData: any[], containerData: any[]): stri
       }
     });
 
-  // Add local categories at the end
+  // Always add the _1000 header with the "Other (specify)" entry
+  result.push('_1000 "Local, traditional or other type of drink"');
+  result.push("{");
+  
+  // Add local categories if any
   if (localCategories.length > 0) {
-    result.push('_1000 "Local, traditional or other type of drink"');
-    result.push("{");
-    result.push(...localCategories.map((cat, i) => cat + (i < localCategories.length - 1 ? "," : "")));
-    result.push("} fix");
+    result.push(...localCategories.map((cat, i) => cat + "," ));
   }
+  
+  // Add "Other (specify)" entry as the last item in the _1000 section
+  result.push('_1004 "Other (specify)" [ ContainersCodes = "{}" ]');
+  result.push("} fix");
 
   result.push("};");
   
@@ -468,6 +473,8 @@ function parseDiaryCategories(list: string[]): any[] {
   let currentHeader: { id: string; text: string } | null = null;
   let inBlock = false;
   let currentItem = '';
+  let hasOtherSpecify = false; // Track if we've already added the "Other (specify)" entry
+  let has1000Header = false; // Track if we've found the _1000 header
   
   // Define default values for all columns
   const defaultValues = {
@@ -502,6 +509,11 @@ function parseDiaryCategories(list: string[]): any[] {
     // Skip empty lines
     if (!line) {
       continue;
+    }
+    
+    // Check for "Other (specify)" entry
+    if (line.includes('_1004') && line.includes('Other (specify)')) {
+      hasOtherSpecify = true;
     }
   
     // Handle block structure
@@ -584,6 +596,11 @@ function parseDiaryCategories(list: string[]): any[] {
         id: headerId,
         text: headerText
       };
+      
+      // Check if this is the _1000 header
+      if (headerId === '1000') {
+        has1000Header = true;
+      }
   
       // Special handling for Alcoholic drinks and alternatives
       const isAlcoholic = headerId === '900' || headerId === '1100';
@@ -642,14 +659,31 @@ function parseDiaryCategories(list: string[]): any[] {
     return row;
   });
 
-  // Add the "Other (specify)" row at the end if we have any rows
-  if (processedRows.length > 0) {
+  // Add the _1000 header if it doesn't exist
+  let localHeaderPosition = headerPositions.get('_1000');
+  if (!has1000Header && processedRows.length > 0) {
+    const newPosition = processedRows.length + 1;
+    processedRows.push({
+      'Position': newPosition,
+      'Text': 'Local, traditional or other type of drink',
+      'Object Name': '_1000',
+      'Group ID': '',
+      'Display As Header': '1',
+      'No Filter': '1',
+      'Extended Properties': '{}',
+      ...defaultValues
+    });
+    localHeaderPosition = newPosition;
+  }
+
+  // Add the "Other (specify)" row at the end if we have any rows and haven't already added it
+  if (processedRows.length > 0 && !hasOtherSpecify) {
     processedRows.push({
       'Position': processedRows.length + 1,
       'Text': 'Other (specify)',
       'Object Name': '_1004',
       'Measure': '',
-      'Group ID': '61',
+      'Group ID': localHeaderPosition ? localHeaderPosition.toString() : '',
       'Answers Reference': '',
       'Display As Header': '0',
       'Fixed To Position': '0',
