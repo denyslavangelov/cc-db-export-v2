@@ -25,45 +25,50 @@ export default function SaveButton() {
 
   const handleFileUpload = async (file: File) => {
     if (!file.name.endsWith('.xlsx')) {
-      toast.error('Please select an Excel file (.xlsx)');
+      toast.error('Please select an Excel file (.xlsx)', {
+        duration: 5000,
+      });
       return;
     }
 
     setIsProcessing(true);
+    setStatus("saving");
     try {
-        setTimeout(async () => {
-            await processExcelFile(file, exportInXlsx);
-            toast.success('Files exported successfully!');
-        }, 2000);
-    } catch (error) {
-      toast.error('Error processing file: ' + (error as Error).message);
+      await processExcelFile(file, exportInXlsx);
+      
+      // Only show success message and animations if no errors were thrown
+      toast.success('Files exported successfully!');
+      setStatus("saved");
+      setBounce(true);
+      
+      // Trigger confetti effect
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ["#ff0000", "#00ff00", "#0000ff", "#ffff00", "#00ffff", "#ff00ff"],
+        shapes: ["star", "circle"],
+      });
+      
+      // Reset to idle after 2 seconds
+      setTimeout(() => {
+        setStatus("idle");
+        setBounce(false);
+      }, 2000);
+    } catch (error: any) {
+      console.error('Error processing file:', error);
+      
+      // Make sure we show an error toast here as well
+      toast.error(`Error: ${error.message || 'Unknown error'}`, {
+        duration: 5000,
+      });
+      
+      // Reset status immediately on error
+      setStatus("idle");
     } finally {
       setIsProcessing(false);
     }
-
-    handleSave();
   };
-  
-  const handleSave = () => {
-    if (status === "idle") {
-      setStatus("saving")
-      setTimeout(() => {
-        setStatus("saved")
-        setBounce(true)
-        confetti({
-          particleCount: 100,
-          spread: 70,
-          origin: { y: 0.6 },
-          colors: ["#ff0000", "#00ff00", "#0000ff", "#ffff00", "#00ffff", "#ff00ff"],
-          shapes: ["star", "circle"],
-        })
-        setTimeout(() => {
-          setStatus("idle")
-          setBounce(false)
-        }, 2000)
-      }, 2000)
-    }
-  }
 
   const buttonVariants = {
     idle: {

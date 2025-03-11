@@ -2,6 +2,7 @@ import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import JSZip from 'jszip';
 import { CountryCodes, ExcelData, ProcessedData } from "@/app/types";
+import { toast } from "sonner";
 
 const COUNTRY_CODES: CountryCodes = {
   "Austria": "AT",
@@ -19,7 +20,8 @@ const COUNTRY_CODES: CountryCodes = {
   "Serbia": "SB",
   "Bulgaria": "BG",
   "KENYA": "KE",
-  "Greece": "GR",
+  "Greece": "GR"
+  // "Uzbekistan": "UZ"
 };
 
 interface DiaryCategory {
@@ -31,18 +33,30 @@ interface DiaryCategory {
 }
 
 export async function processExcelFile(file: File, exportInXlsx: boolean = false): Promise<void> {
-  const data = await readExcelFile(file);
-  const indexSheet = data.INDEX[4]; // Row 10 (0-based)
-  const countryName = indexSheet?.D; // Column D
-  const isoCode = COUNTRY_CODES[countryName];
+  try {
+    const data = await readExcelFile(file);
+    const indexSheet = data.INDEX[4]; // Row 10 (0-based)
+    const countryName = indexSheet?.D; // Column D
+    const isoCode = COUNTRY_CODES[countryName];
+    
+    if (!isoCode) {
+      toast.error(`Country "${countryName}" not recognized. Please check the INDEX sheet.`, {
+        duration: 5000,
+      });
+      throw new Error(`Country "${countryName}" not recognized`);
+    }
 
-  if (!isoCode) {
-    throw new Error('Country not recognized');
+    const processedData = processSheets(data, isoCode);
+    
+    await generateExportFiles(processedData, countryName, isoCode, exportInXlsx);
+    return Promise.resolve();
+  } catch (error: any) {
+    console.error('Error processing Excel file:', error);
+    toast.error(`Error processing file: ${error.message || 'Unknown error'}`, {
+      duration: 5000,
+    });
+    return Promise.reject(error);
   }
-
-  const processedData = processSheets(data, isoCode);
-  
-  await generateExportFiles(processedData, countryName, isoCode, exportInXlsx);
 }
 
 async function readExcelFile(file: File): Promise<ExcelData> {
@@ -191,9 +205,11 @@ function formatDataList(data: any[], listName: string, codeCol: number, category
     }
   }
 
-debugger;
   if (entries.length === 0) {
-    throw new Error("No valid entries found in data");
+    toast.error(`No valid entries found in ${listName}. Please check your Excel file.`, {
+      duration: 5000,
+    });
+    throw new Error(`No valid entries found in ${listName}`);
   }
 
   result.push(...entries.map((entry, i) => entry + (i < entries.length - 1 ? "," : "")));
@@ -295,94 +311,99 @@ function createImagesList(brandList: string[]): any[] {
 }
 
 async function generateExportFiles(data: ProcessedData, countryName: string, isoCode: string, exportInXlsx: boolean): Promise<void> {
-  const zip = new JSZip();
-  
-  // Text files configuration
-  const files = [
-    { name: `MAIN_BRANDLIST_${isoCode}.txt`, content: data.mainBrandList },
-    { name: `DIARY_BRANDLIST_${isoCode}.txt`, content: data.diaryBrandList },
-    { name: `EQUITY_BRANDLIST_${isoCode}.txt`, content: data.equityBrandList },
-    { name: `IMAGERY_LIST_${isoCode}.txt`, content: data.imageryList },
-    { name: `DIARY_CATEGORIES_${isoCode}.txt`, content: data.diaryCategories },
-    { name: `ALL_LISTS_${isoCode}.txt`, content: [...data.mainBrandList, "", ...data.diaryBrandList, "", 
-      ...data.equityBrandList, "", ...data.imageryList, "", ...data.diaryCategories] }
-  ];
+  try {
+    const zip = new JSZip();
+    
+    // Text files configuration
+    const files = [
+      { name: `MAIN_BRANDLIST_${isoCode}.txt`, content: data.mainBrandList },
+      { name: `DIARY_BRANDLIST_${isoCode}.txt`, content: data.diaryBrandList },
+      { name: `EQUITY_BRANDLIST_${isoCode}.txt`, content: data.equityBrandList },
+      { name: `IMAGERY_LIST_${isoCode}.txt`, content: data.imageryList },
+      { name: `DIARY_CATEGORIES_${isoCode}.txt`, content: data.diaryCategories },
+      { name: `ALL_LISTS_${isoCode}.txt`, content: [...data.mainBrandList, "", ...data.diaryBrandList, "", 
+        ...data.equityBrandList, "", ...data.imageryList, "", ...data.diaryCategories] }
+    ];
 
-  // Excel files configuration
-  const excelFiles = [
-    { 
-      name: `MAIN_BRANDLIST_${isoCode}.xlsx`,
-      sheetName: 'Main Brand List',
-      data: data.mainBrandList
-    },
-    { 
-      name: `DIARY_BRANDLIST_${isoCode}.xlsx`,
-      sheetName: 'Diary Brand List',
-      data: data.diaryBrandList
-    },
-    { 
-      name: `EQUITY_BRANDLIST_${isoCode}.xlsx`,
-      sheetName: 'Equity Brand List',
-      data: data.equityBrandList
-    },
-    {
-      name: `DIARY_CATEGORIES_${isoCode}.xlsx`,
-      sheetName: 'Diary Categories',
-      data: data.diaryCategories
-    },
-    {
-      name: `IMAGERY_LIST_${isoCode}.xlsx`,
-      sheetName: 'Imagery List',
-      data: data.imageryList
-    }
-  ];
-
-  // Add image list Excel files
-  if (exportInXlsx) {
-    excelFiles.push(
-      {
-        name: `MAIN_BRANDLIST_IMAGES_${isoCode}.xlsx`,
-        sheetName: 'Main Brand List Images',
-        data: createImagesList(data.mainBrandList)
+    // Excel files configuration
+    const excelFiles = [
+      { 
+        name: `MAIN_BRANDLIST_${isoCode}.xlsx`,
+        sheetName: 'Main Brand List',
+        data: data.mainBrandList
+      },
+      { 
+        name: `DIARY_BRANDLIST_${isoCode}.xlsx`,
+        sheetName: 'Diary Brand List',
+        data: data.diaryBrandList
+      },
+      { 
+        name: `EQUITY_BRANDLIST_${isoCode}.xlsx`,
+        sheetName: 'Equity Brand List',
+        data: data.equityBrandList
       },
       {
-        name: `DIARY_BRANDLIST_IMAGES_${isoCode}.xlsx`,
-        sheetName: 'Diary Brand List Images',
-        data: createImagesList(data.diaryBrandList)
+        name: `DIARY_CATEGORIES_${isoCode}.xlsx`,
+        sheetName: 'Diary Categories',
+        data: data.diaryCategories
       },
       {
-        name: `EQUITY_BRANDLIST_IMAGES_${isoCode}.xlsx`,
-        sheetName: 'Equity Brand List Images',
-        data: createImagesList(data.equityBrandList)
+        name: `IMAGERY_LIST_${isoCode}.xlsx`,
+        sheetName: 'Imagery List',
+        data: data.imageryList
       }
-    );
-  }
+    ];
 
-  // Add text files to zip
-  if (!exportInXlsx) {
-  files.forEach(file => {
-      zip.file(file.name, file.content.join('\n'));
-    });
-  }
-
-  // Add Excel files to zip if exportInXlsx is true
-  if (exportInXlsx) {
-    for (const file of excelFiles) {
-      const excelData = file.name.includes('_IMAGES_') 
-        ? file.data // Use the already formatted image list data
-        : convertToExcelFormat(parseListToExcelRows(file.data));
-      const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.json_to_sheet(excelData);
-      XLSX.utils.book_append_sheet(wb, ws, file.sheetName);
-      const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-      zip.file(file.name, excelBuffer);
+    // Add image list Excel files
+    if (exportInXlsx) {
+      excelFiles.push(
+        {
+          name: `MAIN_BRANDLIST_IMAGES_${isoCode}.xlsx`,
+          sheetName: 'Main Brand List Images',
+          data: createImagesList(data.mainBrandList)
+        },
+        {
+          name: `DIARY_BRANDLIST_IMAGES_${isoCode}.xlsx`,
+          sheetName: 'Diary Brand List Images',
+          data: createImagesList(data.diaryBrandList)
+        },
+        {
+          name: `EQUITY_BRANDLIST_IMAGES_${isoCode}.xlsx`,
+          sheetName: 'Equity Brand List Images',
+          data: createImagesList(data.equityBrandList)
+        }
+      );
     }
-  }
 
-  // Generate and save the zip file
-  const zipBlob = await zip.generateAsync({ type: 'blob' });
-  const format = exportInXlsx ? 'iField' : 'DIMENSIONS';
-  saveAs(zipBlob, `CC_PACKAGE_EXPORT_${countryName.toUpperCase()}_${format.toUpperCase()}.zip`);
+    // Add text files to zip
+    if (!exportInXlsx) {
+    files.forEach(file => {
+        zip.file(file.name, file.content.join('\n'));
+      });
+    }
+
+    // Add Excel files to zip if exportInXlsx is true
+    if (exportInXlsx) {
+      for (const file of excelFiles) {
+        const excelData = file.name.includes('_IMAGES_') 
+          ? file.data // Use the already formatted image list data
+          : convertToExcelFormat(parseListToExcelRows(file.data));
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.json_to_sheet(excelData);
+        XLSX.utils.book_append_sheet(wb, ws, file.sheetName);
+        const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        zip.file(file.name, excelBuffer);
+      }
+    }
+
+    // Generate and save the zip file
+    const zipBlob = await zip.generateAsync({ type: 'blob' });
+    const format = exportInXlsx ? 'iField' : 'DIMENSIONS';
+    saveAs(zipBlob, `CC_PACKAGE_EXPORT_${countryName.toUpperCase()}_${format.toUpperCase()}.zip`);
+  } catch (error: any) {
+    console.error('Error generating export files:', error);
+    toast.error(`Error generating export files: ${error.message || 'Unknown error'}`);
+  }
 }
 
 function parseListToExcelRows(list: string[]): any[] {
