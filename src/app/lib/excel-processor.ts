@@ -307,24 +307,52 @@ function getContainerCodes(containerData: any[], categoryCode: string): string[]
 
 function createImagesList(brandList: string[]): any[] {
   const rows: any[] = [];
+  console.log("Processing brand list for images:", brandList.slice(0, 3)); // Log first 3 items
   
   for (const line of brandList) {
+    // First match basic pattern for code and text
     const match = line.match(/_(\d+)\s*"([^"]+)"/);
+    
     if (match) {
       const objectName = match[1];
       const brandName = match[2];
-      rows.push({
+      
+      // Extract category codes, handling multi-line format
+      let categoryCode = "";
+      const fullText = line.replace(/\n/g, " ");
+      const categoryMatch = fullText.match(/CategoryCode\s*=\s*"\{([^}]+)\}"/);
+      
+      if (categoryMatch) {
+        // Process the category codes - they might be in format _123,_456
+        categoryCode = categoryMatch[1].trim();
+      }
+      
+      const row = {
         'Position': 0, // Will be updated with index + 1 below
         'Text': `{#RESOURCE:_${objectName}.jpg#}<br/>${brandName}`,
-        'Object Name': `_${objectName}`
-      });
+        'Object Name': `_${objectName}`,
+        'Extended Properties': JSON.stringify({
+          CategoryCode: categoryCode
+        })
+      };
+      
+      rows.push(row);
+      
+      // Log the first few processed rows
+      if (rows.length <= 2) {
+        console.log("Processed image row:", row);
+      }
     }
   }
 
-  return rows.map((row, index) => ({
+  const finalRows = rows.map((row, index) => ({
     ...row,
     'Position': index + 1
   }));
+  
+  console.log(`Processed ${finalRows.length} image rows`);
+  
+  return finalRows;
 }
 
 async function generateExportFiles(data: ProcessedData, countryName: string, isoCode: string, exportInXlsx: boolean): Promise<void> {
