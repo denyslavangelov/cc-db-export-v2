@@ -131,11 +131,18 @@ function processImageryList(data: any[], isoCode: string): string[] {
 }
 
 function processDiaryCategories(categoryData: any[], containerData: any[]): string[] {
+  // Check if we have valid data
+  if (!categoryData || categoryData.length === 0) {
+    toast.error("No category data found for diary categories", {
+      duration: 5000,
+    });
+    return [`DIARY_CATEGORIES"" define`, "{", "};"]; // Return minimal valid structure
+  }
+
   const result = [`DIARY_CATEGORIES"" define`, "{"];
   const headers = new Map<string, { label: string, categories: string[] }>();
   const localCategories: string[] = [];
 
-  
   // Process categories
   for (let i = 0; i < categoryData.length; i++) {
     const row = categoryData[i];
@@ -149,7 +156,6 @@ function processDiaryCategories(categoryData: any[], containerData: any[]): stri
 
     if (definition?.toLowerCase().includes("diary")) {
       const containerCodes = getContainerCodes(containerData, code);
-
       
       const entry = formatCategoryEntry(code, label, containerCodes);
 
@@ -168,10 +174,12 @@ function processDiaryCategories(categoryData: any[], containerData: any[]): stri
   Array.from(headers.entries())
     .sort(([a], [b]) => parseInt(a) - parseInt(b))
     .forEach(([code, { label, categories }]) => {
-      result.push(`_${code} "${label}"`);
-      result.push("{");
-      result.push(...categories.map((cat, i) => cat + (i < categories.length - 1 ? "," : "")));
-      result.push("},");
+      if (categories.length > 0) {
+        result.push(`_${code} "${label}"`);
+        result.push("{");
+        result.push(...categories.map((cat, i) => cat + (i < categories.length - 1 ? "," : "")));
+        result.push("},");
+      }
     });
 
   // Add local categories at the end
@@ -183,6 +191,10 @@ function processDiaryCategories(categoryData: any[], containerData: any[]): stri
   }
 
   result.push("};");
+  
+  // Log for debugging
+  console.log("Processed diary categories:", result);
+  
   return result;
 }
 
@@ -343,14 +355,14 @@ async function generateExportFiles(data: ProcessedData, countryName: string, iso
         data: data.equityBrandList
       },
       {
-        name: `DIARY_CATEGORIES_${isoCode}.xlsx`,
-        sheetName: 'Diary Categories',
-        data: data.diaryCategories
-      },
-      {
         name: `IMAGERY_LIST_${isoCode}.xlsx`,
         sheetName: 'Imagery List',
         data: data.imageryList
+      },
+      {
+        name: `DIARY_CATEGORIES_${isoCode}.xlsx`,
+        sheetName: 'Diary Categories',
+        data: data.diaryCategories
       }
     ];
 
@@ -411,7 +423,7 @@ function parseListToExcelRows(list: string[]): any[] {
   let currentObject: any = {};
 
   // Special handling for DIARY_CATEGORIES
-  if (list.length > 0 && list[0].includes('DIARY_CATEGORIES_')) {
+  if (list.length > 0 && list[0].includes('DIARY_CATEGORIES')) {
     return parseDiaryCategories(list);
   }
 
@@ -444,6 +456,14 @@ function parseListToExcelRows(list: string[]): any[] {
 }
 
 function parseDiaryCategories(list: string[]): any[] {
+  console.log("Parsing diary categories:", list);
+  
+  // If the list is empty or only contains the define and empty structure, return empty array
+  if (list.length <= 3) {
+    console.warn("Diary categories list is empty or minimal");
+    return [];
+  }
+  
   const rows: any[] = [];
   let currentHeader: { id: string; text: string } | null = null;
   let inBlock = false;
@@ -520,6 +540,36 @@ function parseDiaryCategories(list: string[]): any[] {
       currentItem = '';
       continue;
     }
+    
+    if (line === '} fix') {
+      inBlock = false;
+      if (currentHeader && currentItem) {
+        // Split items by "],," or "]," to handle multiple items
+        const items = currentItem.split(/\],+/).filter(item => item.trim());
+        
+        for (const item of items) {
+          // Match all three parts: code, label, and container codes
+          const subItemMatch = item.match(/^\s*_(\d+)\s*"([^"]+)"\s*\[\s*ContainersCodes\s*=\s*"\{([^}]+)\}"/);
+          
+          if (subItemMatch) {
+            rows.push({
+              'Text': subItemMatch[2],
+              'Object Name': `_${subItemMatch[1]}`,
+              'Group ID': '', // Temporary empty value, will be filled later
+              'Display As Header': '0',
+              'No Filter': '0',
+              'Extended Properties': JSON.stringify({
+                ContainersCodes: subItemMatch[3]
+              }),
+              ...defaultValues
+            });
+          }
+        }
+      }
+      currentHeader = null;
+      currentItem = '';
+      continue;
+    }
   
     if (line === 'define' || line === '};' || line === '],' || line === '}') {
       continue;
@@ -557,6 +607,12 @@ function parseDiaryCategories(list: string[]): any[] {
     }
   }
   
+  // If no rows were processed, return empty array
+  if (rows.length === 0) {
+    console.warn("No diary categories were processed");
+    return [];
+  }
+  
   // First pass: Add positions and track header positions
   const headerPositions = new Map<string, number>();
   const rowsWithPositions = rows.map((row, index) => {
@@ -586,40 +642,43 @@ function parseDiaryCategories(list: string[]): any[] {
     return row;
   });
 
-  // Add the "Other (specify)" row at the end
-  processedRows.push({
-    'Position': processedRows.length + 1,
-    'Text': 'Other (specify)',
-    'Object Name': '_1004',
-    'Measure': '',
-    'Group ID': '61',
-    'Answers Reference': '',
-    'Display As Header': '0',
-    'Fixed To Position': '0',
-    'Exclusive': '0',
-    'No Filter': '0',
-    'Display Order': '',
-    'SPSS Code': '',
-    'Extended Properties': '{"ContainersCode":""}',
-    'Is Other': '1',
-    'Other field Object Name': '_1004',
-    'Text Field Type': '2',
-    'Data Type': '3',
-    'Placeholder': '',
-    'Precision/Length': '4000',
-    'Scale': '0',
-    'Minimum Text Length': '',
-    'Maximum Text Length': '',
-    'Minimum Value': '',
-    'Maximum Value': '',
-    'Text Content Rule': '',
-    'Range Expression': '',
-    'Regular Expression': '',
-    'Visualization': '1',
-    'Data Classification': '0',
-    'Other field Extended Properties': '{}'
-  });
+  // Add the "Other (specify)" row at the end if we have any rows
+  if (processedRows.length > 0) {
+    processedRows.push({
+      'Position': processedRows.length + 1,
+      'Text': 'Other (specify)',
+      'Object Name': '_1004',
+      'Measure': '',
+      'Group ID': '61',
+      'Answers Reference': '',
+      'Display As Header': '0',
+      'Fixed To Position': '0',
+      'Exclusive': '0',
+      'No Filter': '0',
+      'Display Order': '',
+      'SPSS Code': '',
+      'Extended Properties': '{"ContainersCode":""}',
+      'Is Other': '1',
+      'Other field Object Name': '_1004',
+      'Text Field Type': '2',
+      'Data Type': '3',
+      'Placeholder': '',
+      'Precision/Length': '4000',
+      'Scale': '0',
+      'Minimum Text Length': '',
+      'Maximum Text Length': '',
+      'Minimum Value': '',
+      'Maximum Value': '',
+      'Text Content Rule': '',
+      'Range Expression': '',
+      'Regular Expression': '',
+      'Visualization': '1',
+      'Data Classification': '0',
+      'Other field Extended Properties': '{}'
+    });
+  }
 
+  console.log("Processed diary categories rows:", processedRows.length);
   return processedRows;
 }
 
