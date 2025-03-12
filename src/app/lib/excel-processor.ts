@@ -84,11 +84,13 @@ async function readExcelFile(file: File): Promise<ExcelData> {
           return jsonData;
         };
 
+        debugger;
         const result: ExcelData = {
           INDEX: processSheet('INDEX'),
           MAIN_BRAND_LIST: processSheet('MAIN BRAND LIST', true),
           DIARY_BRAND_LIST: processSheet('DIARY BRAND LIST', true),
           IMAGERY: processSheet('IMAGERY', true),
+          EQUITY_BRAND_LIST: processSheet('EQUITY LIST', true),
           SUB_CATEGORY_LIST: processSheet('SUB CATEGORY LIST', true),
           CONTAINERS: processSheet('CONTAINERS', true)
         };
@@ -107,7 +109,7 @@ function processSheets(data: ExcelData, isoCode: string): ProcessedData {
   return {
     mainBrandList: processMainBrandList(data.MAIN_BRAND_LIST, isoCode),
     diaryBrandList: processDiaryBrandList(data.DIARY_BRAND_LIST, isoCode),
-    equityBrandList: processEquityBrandList(data.MAIN_BRAND_LIST, isoCode),
+    equityBrandList: processEquityBrandList(data.EQUITY_BRAND_LIST, isoCode),
     imageryList: processImageryList(data.IMAGERY, isoCode),
     diaryCategories: processDiaryCategories(data.SUB_CATEGORY_LIST, data.CONTAINERS),
     fullList: [] // This will be populated after processing all other lists
