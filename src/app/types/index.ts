@@ -9,6 +9,7 @@ export interface CountryCodes {
     IMAGERY: any[];
     SUB_CATEGORY_LIST: any[];
     CONTAINERS: any[];
+    EQUITY_BRAND_LIST: any[];
   }
   
   export interface ProcessedData {
