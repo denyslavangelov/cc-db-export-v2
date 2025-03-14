@@ -21,7 +21,8 @@ const COUNTRY_CODES: CountryCodes = {
   "Bulgaria": "BG",
   "KENYA": "KE",
   "Greece": "GR",
-  "Uzbekistan": "UZ"
+  "Uzbekistan": "UZ",
+  "Ukraine": "UR"
 };
 
 interface DiaryCategory {
