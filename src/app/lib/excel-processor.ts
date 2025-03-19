@@ -23,7 +23,8 @@ const COUNTRY_CODES: CountryCodes = {
   "Greece": "GR",
   "Uzbekistan": "UZ",
   "Ukraine": "UR",
-  "Iraq": "IQ"
+  "Iraq": "IQ",
+  "Pakistan", "PK"
 };
 
 interface DiaryCategory {
