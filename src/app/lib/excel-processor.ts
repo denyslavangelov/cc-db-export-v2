@@ -205,7 +205,7 @@ function processDiaryCategories(categoryData: any[], containerData: any[]): stri
   }
   
   // Add "Other (specify)" entry as the last item in the _1000 section
-  result.push('_1004 "Other (specify)" [ ContainersCodes = "{}" ]');
+  result.push('_1004 "Other (specify)" [ ContainersCodes = "{}" ] other');
   result.push("} fix");
 
   result.push("};");
