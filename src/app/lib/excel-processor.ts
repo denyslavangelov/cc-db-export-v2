@@ -20,7 +20,7 @@ const COUNTRY_CODES: CountryCodes = {
     "Sweden": "SE",
     "Switzerland": "CH",
     "Ukraine": "UA",
-    "Kenya": "KE",
+    "KENYA": "KE",
     "Nigeria": "NG",
     "Iraq": "IQ",
     "Pakistan": "PK",
