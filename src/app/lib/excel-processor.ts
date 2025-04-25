@@ -4,36 +4,88 @@ import JSZip from 'jszip';
 import { CountryCodes, ExcelData, ProcessedData } from "@/app/types";
 import { toast } from "sonner";
 
-const COUNTRY_CODES: CountryCodes = {
-    "Austria": "AT",
-    "Bulgaria": "BG",
-    "Croatia": "CR",
-    "Czechia": "CZ",
-    "Denmark": "DK",
-    "Finland": "FI",
-    "Greece": "GR",
-    "Hungary": "HU",
-    "Ireland": "IE",
-    "Norway": "NO",
-    "Serbia": "SB",
-    "Slovakia": "SK",
-    "Sweden": "SE",
-    "Switzerland": "CH",
-    "Ukraine": "UA",
-    "KENYA": "KE",
-    "Nigeria": "NG",
-    "Iraq": "IQ",
-    "Pakistan": "PK",
-    "Uzbekistan": "UZ",
-    "Saudi Arabia": "SA",
-    "Portugal": "PT",
-    "Tanzania": "TZ",
-    "Uganda": "UG",
-    "Ethiopia": "ET",
-    "Angola": "AO",
-    "Bangladesh": "BD",
-    "Egypt": "EG"
-};
+// Function to get ISO country code from country name
+function getCountryCode(countryName: string): string | undefined {
+  try {
+    // Normalize country name: trim, convert to title case
+    const normalizedName = countryName.trim();
+    
+    // Try to get ISO code using Intl.DisplayNames API (modern browsers only)
+    if (typeof Intl !== 'undefined' && Intl.DisplayNames) {
+      // Get all region codes
+      const regionNames = new Intl.DisplayNames(['en'], { type: 'region' });
+      
+      // Use common ISO 3166-1 alpha-2 country codes and check each one
+      // This is a more dynamic approach than hardcoding every country code
+      const regions = [
+        // Europe
+        'AT', 'BE', 'BG', 'CH', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GB', 'GR', 'HR', 'HU', 
+        'IE', 'IT', 'LT', 'LU', 'LV', 'MT', 'NL', 'NO', 'PL', 'PT', 'RO', 'RS', 'SE', 'SI', 'SK', 'UA',
+        // Africa
+        'AO', 'DZ', 'EG', 'ET', 'KE', 'MA', 'NG', 'TZ', 'UG', 'ZA',
+        // Asia
+        'AE', 'BD', 'CN', 'ID', 'IN', 'IQ', 'IR', 'JP', 'KR', 'PK', 'SA', 'SG', 'TH', 'TR', 'UZ', 'VN',
+        // Americas
+        'AR', 'BR', 'CA', 'CL', 'CO', 'MX', 'PE', 'US', 'VE',
+        // Oceania
+        'AU', 'NZ',
+        // Additional countries from fallback list for completeness
+        'HR', 'RS', 'RU', 'BY', 'BA', 'MD', 'AL', 'MK', 'ME', 'XK'
+      ];
+      
+      // First try a direct match with the regions we specified
+      for (const code of regions) {
+        const name = regionNames.of(code);
+        if (name && name.toLowerCase() === normalizedName.toLowerCase()) {
+          return code;
+        }
+      }
+      
+      // For other countries, try using a more exhaustive approach
+      // The following common patterns can detect most ISO codes
+      const possibleISOCodes: string[] = [];
+      
+      // Common pattern: first two letters of country name
+      const firstTwoLetters = normalizedName.substring(0, 2).toUpperCase();
+      possibleISOCodes.push(firstTwoLetters);
+      
+      // Generate a few more possible codes based on country name
+      const words = normalizedName.split(/\s+/);
+      if (words.length > 1) {
+        // For countries with multiple words, try first letters of each word
+        const initials = words.map(word => word.charAt(0).toUpperCase()).join('');
+        possibleISOCodes.push(initials);
+      }
+      
+      // Check these possible codes
+      for (const code of possibleISOCodes) {
+        try {
+          const name = regionNames.of(code);
+          if (name && name.toLowerCase() === normalizedName.toLowerCase()) {
+            return code;
+          }
+        } catch (e) {
+          // Invalid region code, continue to next one
+          continue;
+        }
+      }
+    }
+    
+    // Fallback: Simple mapping for common countries
+    const commonCountries: Record<string, string> = {
+      "Austria": "AT", "Bulgaria": "BG", "Denmark": "DK", "Finland": "FI",
+      "Greece": "GR", "Hungary": "HU", "Ireland": "IE", "Norway": "NO", 
+      "Slovakia": "SK", "Sweden": "SE", "Switzerland": "CH", "Ukraine": "UA",
+      "Nigeria": "NG", "Iraq": "IQ", "Pakistan": "PK", "Uzbekistan": "UZ",
+      "Saudi Arabia": "SA", "Portugal": "PT", "Bangladesh": "BD", "Egypt": "EG"
+    };
+    
+    return commonCountries[normalizedName] || undefined;
+  } catch (error) {
+    console.error('Error getting country code:', error);
+    return undefined;
+  }
+}
 
 interface DiaryCategory {
   text: string;
@@ -48,7 +100,8 @@ export async function processExcelFile(file: File, exportInXlsx: boolean = false
     const data = await readExcelFile(file);
     const indexSheet = data.INDEX[4]; // Row 10 (0-based)
     const countryName = indexSheet?.D; // Column D
-    const isoCode = COUNTRY_CODES[countryName];
+    
+    const isoCode = getCountryCode(countryName);
     
     if (!isoCode) {
       toast.error(`Country "${countryName}" not recognized. Please check the INDEX sheet.`, {
