@@ -204,7 +204,7 @@ function processDiaryCategories(categoryData: any[], containerData: any[]): stri
     result.push(...localCategories.map((cat, i) => cat + "," ));
   }
   
-  // Add "Other (specify)" entry as the last item in the _1000 section
+  // Always add "Other (specify)" entry as the last item in the _1000 section
   result.push('_1004 "Other (specify)" [ ContainersCodes = "{}" ] other');
   result.push("} fix");
 
@@ -372,92 +372,79 @@ async function generateExportFiles(data: ProcessedData, countryName: string, iso
   try {
     const zip = new JSZip();
     
-    // Text files configuration
-    const files = [
-      { name: `MAIN_BRANDLIST_${isoCode}.txt`, content: data.mainBrandList },
-      { name: `DIARY_BRANDLIST_${isoCode}.txt`, content: data.diaryBrandList },
-      { name: `EQUITY_BRANDLIST_${isoCode}.txt`, content: data.equityBrandList },
-      { name: `IMAGERY_LIST_${isoCode}.txt`, content: data.imageryList },
-      { name: `DIARY_CATEGORIES_${isoCode}.txt`, content: data.diaryCategories },
-      { name: `ALL_LISTS_${isoCode}.txt`, content: [...data.mainBrandList, "", ...data.diaryBrandList, "", 
-        ...data.equityBrandList, "", ...data.imageryList, "", ...data.diaryCategories] }
-    ];
-
     // Excel files configuration
     const excelFiles = [
       { 
-        name: `MAIN_BRANDLIST_${isoCode}.xlsx`,
-        sheetName: 'Main Brand List',
+        name: `MAIN_BRANDLIST_${isoCode}`,
+        sheetName: `MAIN_BRANDLIST_${isoCode}`,
         data: data.mainBrandList
       },
       { 
-        name: `DIARY_BRANDLIST_${isoCode}.xlsx`,
-        sheetName: 'Diary Brand List',
+        name: `DIARY_BRANDLIST_${isoCode}`,
+        sheetName: `DIARY_BRANDLIST_${isoCode}`,
         data: data.diaryBrandList
       },
       { 
-        name: `EQUITY_BRANDLIST_${isoCode}.xlsx`,
-        sheetName: 'Equity Brand List',
+        name: `EQUITY_BRANDLIST_${isoCode}`,
+        sheetName: `EQUITY_BRANDLIST_${isoCode}`,
         data: data.equityBrandList
       },
       {
-        name: `IMAGERY_LIST_${isoCode}.xlsx`,
-        sheetName: 'Imagery List',
+        name: `IMAGERY_LIST_${isoCode}`,
+        sheetName: `IMAGERY_LIST_${isoCode}`,
         data: data.imageryList
       },
       {
-        name: `DIARY_CATEGORIES_${isoCode}.xlsx`,
-        sheetName: 'Diary Categories',
+        name: `DIARY_CATEGORIES_${isoCode}`,
+        sheetName: `DIARY_CATEGORIES_${isoCode}`,
         data: data.diaryCategories
       }
     ];
 
-    // Add image list Excel files
-    if (exportInXlsx) {
-      excelFiles.push(
-        {
-          name: `MAIN_BRANDLIST_IMAGES_${isoCode}.xlsx`,
-          sheetName: 'Main Brand List Images',
-          data: createImagesList(data.mainBrandList)
-        },
-        {
-          name: `DIARY_BRANDLIST_IMAGES_${isoCode}.xlsx`,
-          sheetName: 'Diary Brand List Images',
-          data: createImagesList(data.diaryBrandList)
-        },
-        {
-          name: `EQUITY_BRANDLIST_IMAGES_${isoCode}.xlsx`,
-          sheetName: 'Equity Brand List Images',
-          data: createImagesList(data.equityBrandList)
-        }
-      );
-    }
+    // Image list Excel sheet configurations
+    const imageExcelFiles = exportInXlsx ? [
+      {
+        name: `MAIN_BRANDLIST_IMAGES_${isoCode}`,
+        sheetName: `MAIN_BRANDLIST_IMAGES_${isoCode}`,
+        data: createImagesList(data.mainBrandList)
+      },
+      {
+        name: `DIARY_BRANDLIST_IMAGES_${isoCode}`,
+        sheetName: `DIARY_BRANDLIST_IMAGES_${isoCode}`,
+        data: createImagesList(data.diaryBrandList)
+      },
+      {
+        name: `EQUITY_BRANDLIST_IMAGES_${isoCode}`,
+        sheetName: `EQUITY_BRANDLIST_IMAGES_${isoCode}`,
+        data: createImagesList(data.equityBrandList)
+      }
+    ] : [];
 
-    // Add text files to zip
-    if (!exportInXlsx) {
-    files.forEach(file => {
-        zip.file(file.name, file.content.join('\n'));
-      });
+    // Create a single Excel file with multiple sheets
+    const combinedWorkbook = XLSX.utils.book_new();
+    
+    // Add regular sheets
+    for (const file of excelFiles) {
+      const excelData = convertToExcelFormat(parseListToExcelRows(file.data));
+      const ws = XLSX.utils.json_to_sheet(excelData);
+      XLSX.utils.book_append_sheet(combinedWorkbook, ws, file.sheetName);
     }
-
-    // Add Excel files to zip if exportInXlsx is true
+    
+    // Add image sheets if exportInXlsx is true
     if (exportInXlsx) {
-      for (const file of excelFiles) {
-        const excelData = file.name.includes('_IMAGES_') 
-          ? file.data // Use the already formatted image list data
-          : convertToExcelFormat(parseListToExcelRows(file.data));
-        const wb = XLSX.utils.book_new();
-        const ws = XLSX.utils.json_to_sheet(excelData);
-        XLSX.utils.book_append_sheet(wb, ws, file.sheetName);
-        const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-        zip.file(file.name, excelBuffer);
+      for (const file of imageExcelFiles) {
+        const ws = XLSX.utils.json_to_sheet(file.data);
+        XLSX.utils.book_append_sheet(combinedWorkbook, ws, file.sheetName);
       }
     }
-
-    // Generate and save the zip file
-    const zipBlob = await zip.generateAsync({ type: 'blob' });
+    
+    // Generate the combined Excel file
+    const combinedExcelBuffer = XLSX.write(combinedWorkbook, { bookType: 'xlsx', type: 'array' });
+    
+    // Save the Excel file directly (not in a zip)
     const format = exportInXlsx ? 'iField' : 'DIMENSIONS';
-    saveAs(zipBlob, `CC_PACKAGE_EXPORT_${countryName.toUpperCase()}_${format.toUpperCase()}.zip`);
+    const excelBlob = new Blob([combinedExcelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    saveAs(excelBlob, `CC_PACKAGE_EXPORT_${countryName.toUpperCase()}_${format.toUpperCase()}.xlsx`);
   } catch (error: any) {
     console.error('Error generating export files:', error);
     toast.error(`Error generating export files: ${error.message || 'Unknown error'}`);
@@ -587,6 +574,31 @@ function parseDiaryCategories(list: string[]): any[] {
               ...defaultValues
             });
           }
+          
+          // Also check for "Other (specify)" entry with "other" keyword
+          const otherSpecifyMatch = item.match(/^\s*_(\d+)\s*"([^"]+)"\s*\[\s*ContainersCodes\s*=\s*"\{([^}]*)\}"\s*\]\s*other/);
+          if (otherSpecifyMatch) {
+            hasOtherSpecify = true;
+            rows.push({
+              'Text': otherSpecifyMatch[2],
+              'Object Name': `_${otherSpecifyMatch[1]}`,
+              'Group ID': '', // Will be updated later
+              'Display As Header': '0',
+              'No Filter': '0', 
+              'Extended Properties': JSON.stringify({
+                ContainersCodes: otherSpecifyMatch[3]
+              }),
+              ...defaultValues,
+              'Fixed To Position': '1',
+              'Is Other': '1',
+              'Other field Object Name': `_${otherSpecifyMatch[1]}`,
+              'Text Field Type': '2',
+              'Data Type': '3',
+              'Precision/Length': '4000',
+              'Scale': '0',
+              'Visualization': '1'
+            });
+          }
         }
       }
       currentHeader = null;
@@ -615,6 +627,30 @@ function parseDiaryCategories(list: string[]): any[] {
                 ContainersCodes: subItemMatch[3]
               }),
               ...defaultValues
+            });
+          }
+          
+          // Also check for "Other (specify)" entry with "other" keyword
+          const otherSpecifyMatch = item.match(/^\s*_(\d+)\s*"([^"]+)"\s*\[\s*ContainersCodes\s*=\s*"\{([^}]*)\}"\s*\]\s*other/);
+          if (otherSpecifyMatch) {
+            hasOtherSpecify = true;
+            rows.push({
+              'Text': otherSpecifyMatch[2],
+              'Object Name': `_${otherSpecifyMatch[1]}`,
+              'Group ID': '', // Will be updated later
+              'Display As Header': '0',
+              'No Filter': '0', 
+              'Extended Properties': JSON.stringify({
+                ContainersCodes: otherSpecifyMatch[3]
+              }),
+              ...defaultValues,
+              'Is Other': '1',
+              'Other field Object Name': `_${otherSpecifyMatch[1]}`,
+              'Text Field Type': '2',
+              'Data Type': '3',
+              'Precision/Length': '4000',
+              'Scale': '0',
+              'Visualization': '1'
             });
           }
         }
@@ -723,33 +759,18 @@ function parseDiaryCategories(list: string[]): any[] {
       'Position': processedRows.length + 1,
       'Text': 'Other (specify)',
       'Object Name': '_1004',
-      'Measure': '',
       'Group ID': localHeaderPosition ? localHeaderPosition.toString() : '',
-      'Answers Reference': '',
       'Display As Header': '0',
-      'Fixed To Position': '0',
-      'Exclusive': '0',
       'No Filter': '0',
-      'Display Order': '',
-      'SPSS Code': '',
       'Extended Properties': '{"ContainersCode":""}',
+      ...defaultValues,
       'Is Other': '1',
       'Other field Object Name': '_1004',
       'Text Field Type': '2',
       'Data Type': '3',
-      'Placeholder': '',
       'Precision/Length': '4000',
       'Scale': '0',
-      'Minimum Text Length': '',
-      'Maximum Text Length': '',
-      'Minimum Value': '',
-      'Maximum Value': '',
-      'Text Content Rule': '',
-      'Range Expression': '',
-      'Regular Expression': '',
-      'Visualization': '1',
-      'Data Classification': '0',
-      'Other field Extended Properties': '{}'
+      'Visualization': '1'
     });
   }
 
