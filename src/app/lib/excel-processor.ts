@@ -223,6 +223,7 @@ function processDiaryCategories(categoryData: any[], containerData: any[]): stri
     if (definition?.toLowerCase().includes("diary")) {
       const containerCodes = getContainerCodes(containerData, code);
       
+      debugger;
       const entry = formatCategoryEntry(code, label, containerCodes);
 
       if (headerCode === "1000") {
@@ -267,6 +268,20 @@ function processDiaryCategories(categoryData: any[], containerData: any[]): stri
   console.log("Processed diary categories:", result);
   
   return result;
+}
+
+function formatCategoryEntry(code: string, name: string, containerCodes: string[]): string {
+  if (containerCodes.length > 0) {
+    return [
+      `      _${code} "${name}"`,
+      "[",
+      `      ContainersCodes = "{_${containerCodes.join(",_")}}"`,
+      "]"
+    ].join("\n");
+  } else {
+    // Include categories without container codes
+    return `      _${code} "${name}"`;
+  }
 }
 
 // Helper functions
@@ -333,16 +348,6 @@ function formatEntry(code: string, name: string, categoryCodes: string[]): strin
     `      CategoryCode = "{_${categoryCodes.join(",_")}}"`,
     "]"
   ].join("\n");
-}
-
-function formatCategoryEntry(code: string, name: string, containerCodes: string[]): string {
-  const entry = [`      _${code} "${name}"`];
-  if (containerCodes.length > 0) {
-    entry.push("[");
-    entry.push(`      ContainersCodes = "{_${containerCodes.join(",_")}}"`,);
-    entry.push("]");
-  }
-  return entry.join("\n");
 }
 
 function getContainerCodes(containerData: any[], categoryCode: string): string[] {
@@ -425,6 +430,17 @@ async function generateExportFiles(data: ProcessedData, countryName: string, iso
   try {
     const zip = new JSZip();
     
+    // Text files configuration
+    const textFiles = [
+      { name: `MAIN_BRANDLIST_${isoCode}.txt`, content: data.mainBrandList },
+      { name: `DIARY_BRANDLIST_${isoCode}.txt`, content: data.diaryBrandList },
+      { name: `EQUITY_BRANDLIST_${isoCode}.txt`, content: data.equityBrandList },
+      { name: `IMAGERY_LIST_${isoCode}.txt`, content: data.imageryList },
+      { name: `DIARY_CATEGORIES_${isoCode}.txt`, content: data.diaryCategories },
+      { name: `ALL_LISTS_${isoCode}.txt`, content: [...data.mainBrandList, "", ...data.diaryBrandList, "", 
+        ...data.equityBrandList, "", ...data.imageryList, "", ...data.diaryCategories] }
+    ];
+
     // Excel files configuration
     const excelFiles = [
       { 
@@ -456,48 +472,56 @@ async function generateExportFiles(data: ProcessedData, countryName: string, iso
 
     // Image list Excel sheet configurations
     const imageExcelFiles = exportInXlsx ? [
-      {
+        {
         name: `MAIN_BRANDLIST_IMAGES_${isoCode}`,
         sheetName: `MAIN_BRANDLIST_IMAGES_${isoCode}`,
-        data: createImagesList(data.mainBrandList)
-      },
-      {
+          data: createImagesList(data.mainBrandList)
+        },
+        {
         name: `DIARY_BRANDLIST_IMAGES_${isoCode}`,
         sheetName: `DIARY_BRANDLIST_IMAGES_${isoCode}`,
-        data: createImagesList(data.diaryBrandList)
-      },
-      {
+          data: createImagesList(data.diaryBrandList)
+        },
+        {
         name: `EQUITY_BRANDLIST_IMAGES_${isoCode}`,
         sheetName: `EQUITY_BRANDLIST_IMAGES_${isoCode}`,
-        data: createImagesList(data.equityBrandList)
-      }
+          data: createImagesList(data.equityBrandList)
+        }
     ] : [];
 
-    // Create a single Excel file with multiple sheets
-    const combinedWorkbook = XLSX.utils.book_new();
-    
-    // Add regular sheets
-    for (const file of excelFiles) {
-      const excelData = convertToExcelFormat(parseListToExcelRows(file.data));
-      const ws = XLSX.utils.json_to_sheet(excelData);
-      XLSX.utils.book_append_sheet(combinedWorkbook, ws, file.sheetName);
-    }
-    
-    // Add image sheets if exportInXlsx is true
     if (exportInXlsx) {
+      // Create a single Excel file with multiple sheets for iField format
+      const combinedWorkbook = XLSX.utils.book_new();
+      
+      // Add regular sheets
+      for (const file of excelFiles) {
+        const excelData = convertToExcelFormat(parseListToExcelRows(file.data));
+        const ws = XLSX.utils.json_to_sheet(excelData);
+        XLSX.utils.book_append_sheet(combinedWorkbook, ws, file.sheetName);
+      }
+      
+      // Add image sheets
       for (const file of imageExcelFiles) {
         const ws = XLSX.utils.json_to_sheet(file.data);
         XLSX.utils.book_append_sheet(combinedWorkbook, ws, file.sheetName);
       }
+      
+      // Generate the combined Excel file
+      const combinedExcelBuffer = XLSX.write(combinedWorkbook, { bookType: 'xlsx', type: 'array' });
+      
+      // Save the Excel file directly (not in a zip)
+      const excelBlob = new Blob([combinedExcelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      saveAs(excelBlob, `CC_PACKAGE_EXPORT_${countryName.toUpperCase()}_IFIELD.xlsx`);
+    } else {
+      // For DIMENSIONS format, create text files
+      for (const file of textFiles) {
+        zip.file(file.name, file.content.join('\n'));
+      }
+      
+      // Generate and save the zip file with text files
+    const zipBlob = await zip.generateAsync({ type: 'blob' });
+      saveAs(zipBlob, `CC_PACKAGE_EXPORT_${countryName.toUpperCase()}_DIMENSIONS.zip`);
     }
-    
-    // Generate the combined Excel file
-    const combinedExcelBuffer = XLSX.write(combinedWorkbook, { bookType: 'xlsx', type: 'array' });
-    
-    // Save the Excel file directly (not in a zip)
-    const format = exportInXlsx ? 'iField' : 'DIMENSIONS';
-    const excelBlob = new Blob([combinedExcelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    saveAs(excelBlob, `CC_PACKAGE_EXPORT_${countryName.toUpperCase()}_${format.toUpperCase()}.xlsx`);
   } catch (error: any) {
     console.error('Error generating export files:', error);
     toast.error(`Error generating export files: ${error.message || 'Unknown error'}`);
@@ -607,52 +631,8 @@ function parseDiaryCategories(list: string[]): any[] {
     if (line === '},') {
       inBlock = false;
       if (currentHeader && currentItem) {
-        // Split items by "],," or "]," to handle multiple items
-        const items = currentItem.split(/\],+/).filter(item => item.trim());
-        
-        for (const item of items) {
-          // Match all three parts: code, label, and container codes
-          const subItemMatch = item.match(/^\s*_(\d+)\s*"([^"]+)"\s*\[\s*ContainersCodes\s*=\s*"\{([^}]+)\}"/);
-          
-          if (subItemMatch) {
-            rows.push({
-              'Text': subItemMatch[2],
-              'Object Name': `_${subItemMatch[1]}`,
-              'Group ID': '', // Temporary empty value, will be filled later
-              'Display As Header': '0',
-              'No Filter': '0',
-              'Extended Properties': JSON.stringify({
-                ContainersCodes: subItemMatch[3]
-              }),
-              ...defaultValues
-            });
-          }
-          
-          // Also check for "Other (specify)" entry with "other" keyword
-          const otherSpecifyMatch = item.match(/^\s*_(\d+)\s*"([^"]+)"\s*\[\s*ContainersCodes\s*=\s*"\{([^}]*)\}"\s*\]\s*other/);
-          if (otherSpecifyMatch) {
-            hasOtherSpecify = true;
-            rows.push({
-              'Text': otherSpecifyMatch[2],
-              'Object Name': `_${otherSpecifyMatch[1]}`,
-              'Group ID': '', // Will be updated later
-              'Display As Header': '0',
-              'No Filter': '0', 
-              'Extended Properties': JSON.stringify({
-                ContainersCodes: otherSpecifyMatch[3]
-              }),
-              ...defaultValues,
-              'Fixed To Position': '1',
-              'Is Other': '1',
-              'Other field Object Name': `_${otherSpecifyMatch[1]}`,
-              'Text Field Type': '2',
-              'Data Type': '3',
-              'Precision/Length': '4000',
-              'Scale': '0',
-              'Visualization': '1'
-            });
-          }
-        }
+        // Process the accumulated items
+        processBlockItems(currentItem, currentHeader, rows, defaultValues);
       }
       currentHeader = null;
       currentItem = '';
@@ -662,51 +642,8 @@ function parseDiaryCategories(list: string[]): any[] {
     if (line === '} fix') {
       inBlock = false;
       if (currentHeader && currentItem) {
-        // Split items by "],," or "]," to handle multiple items
-        const items = currentItem.split(/\],+/).filter(item => item.trim());
-        
-        for (const item of items) {
-          // Match all three parts: code, label, and container codes
-          const subItemMatch = item.match(/^\s*_(\d+)\s*"([^"]+)"\s*\[\s*ContainersCodes\s*=\s*"\{([^}]+)\}"/);
-          
-          if (subItemMatch) {
-            rows.push({
-              'Text': subItemMatch[2],
-              'Object Name': `_${subItemMatch[1]}`,
-              'Group ID': '', // Temporary empty value, will be filled later
-              'Display As Header': '0',
-              'No Filter': '0',
-              'Extended Properties': JSON.stringify({
-                ContainersCodes: subItemMatch[3]
-              }),
-              ...defaultValues
-            });
-          }
-          
-          // Also check for "Other (specify)" entry with "other" keyword
-          const otherSpecifyMatch = item.match(/^\s*_(\d+)\s*"([^"]+)"\s*\[\s*ContainersCodes\s*=\s*"\{([^}]*)\}"\s*\]\s*other/);
-          if (otherSpecifyMatch) {
-            hasOtherSpecify = true;
-            rows.push({
-              'Text': otherSpecifyMatch[2],
-              'Object Name': `_${otherSpecifyMatch[1]}`,
-              'Group ID': '', // Will be updated later
-              'Display As Header': '0',
-              'No Filter': '0', 
-              'Extended Properties': JSON.stringify({
-                ContainersCodes: otherSpecifyMatch[3]
-              }),
-              ...defaultValues,
-              'Is Other': '1',
-              'Other field Object Name': `_${otherSpecifyMatch[1]}`,
-              'Text Field Type': '2',
-              'Data Type': '3',
-              'Precision/Length': '4000',
-              'Scale': '0',
-              'Visualization': '1'
-            });
-          }
-        }
+        // Process the accumulated items
+        processBlockItems(currentItem, currentHeader, rows, defaultValues);
       }
       currentHeader = null;
       currentItem = '';
@@ -829,6 +766,89 @@ function parseDiaryCategories(list: string[]): any[] {
 
   console.log("Processed diary categories rows:", processedRows.length);
   return processedRows;
+}
+
+// Helper function to process items within a diary category block
+function processBlockItems(itemsText: string, header: { id: string; text: string }, rows: any[], defaultValues: any) {
+  // Split by commas at end of lines, but be careful not to split inside the ContainersCodes section
+  const items = [];
+  let currentItem = '';
+  let insideContainer = false;
+  
+  for (const char of itemsText) {
+    if (char === '[') insideContainer = true;
+    if (char === ']') insideContainer = false;
+    
+    if (char === ',' && !insideContainer) {
+      // Found a comma separating items
+      items.push(currentItem.trim());
+      currentItem = '';
+    } else {
+      currentItem += char;
+    }
+  }
+  
+  // Add the last item
+  if (currentItem.trim()) {
+    items.push(currentItem.trim());
+  }
+  
+  for (const item of items) {
+    // Match items with container codes: _102 "Sparkling (fizzy) soft drink - Low calorie / no sugar" [ ContainersCodes = "{_1,_7,_3,_6,_4,_2,_5}" ]
+    const withContainersMatch = item.match(/^\s*_(\d+)\s*"([^"]+)"\s*\[\s*ContainersCodes\s*=\s*"\{([^}]*)\}"\s*\]/);
+    
+    // Match items without container codes: _705 "Sports drinks - Powdered or liquid concentrate rapid hydration"
+    const withoutContainersMatch = item.match(/^\s*_(\d+)\s*"([^"]+)"\s*$/);
+    
+    // Match "Other (specify)" entry with "other" keyword
+    const otherSpecifyMatch = item.match(/^\s*_(\d+)\s*"([^"]+)"\s*\[\s*ContainersCodes\s*=\s*"\{([^}]*)\}"\s*\]\s*other/);
+    
+    if (withContainersMatch) {
+      rows.push({
+        'Text': withContainersMatch[2],
+        'Object Name': `_${withContainersMatch[1]}`,
+        'Group ID': '', // Temporary value, will be updated later
+        'Display As Header': '0',
+        'No Filter': '0',
+        'Extended Properties': JSON.stringify({
+          ContainersCodes: withContainersMatch[3]
+        }),
+        ...defaultValues
+      });
+    } else if (withoutContainersMatch) {
+      // Process items without container codes
+      rows.push({
+        'Text': withoutContainersMatch[2],
+        'Object Name': `_${withoutContainersMatch[1]}`,
+        'Group ID': '', // Temporary value, will be updated later
+        'Display As Header': '0',
+        'No Filter': '0',
+        'Extended Properties': JSON.stringify({
+          ContainersCodes: ""
+        }),
+        ...defaultValues
+      });
+    } else if (otherSpecifyMatch) {
+      rows.push({
+        'Text': otherSpecifyMatch[2],
+        'Object Name': `_${otherSpecifyMatch[1]}`,
+        'Group ID': '', // Will be updated later
+        'Display As Header': '0',
+        'No Filter': '0', 
+        'Extended Properties': JSON.stringify({
+          ContainersCodes: otherSpecifyMatch[3]
+        }),
+        ...defaultValues,
+        'Is Other': '1',
+        'Other field Object Name': `_${otherSpecifyMatch[1]}`,
+        'Text Field Type': '2',
+        'Data Type': '3',
+        'Precision/Length': '4000',
+        'Scale': '0',
+        'Visualization': '1'
+      });
+    }
+  }
 }
 
 function convertToExcelFormat(rows: any[]): any[] {
