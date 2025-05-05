@@ -220,10 +220,10 @@ function processDiaryCategories(categoryData: any[], containerData: any[]): stri
 
     if (!label || !code) continue;
 
+    // Include all categories that have diary in definition, regardless of brands
     if (definition?.toLowerCase().includes("diary")) {
       const containerCodes = getContainerCodes(containerData, code);
       
-      debugger;
       const entry = formatCategoryEntry(code, label, containerCodes);
 
       if (headerCode === "1000") {
@@ -237,16 +237,17 @@ function processDiaryCategories(categoryData: any[], containerData: any[]): stri
     }
   }
 
-  // Add headers and their categories
+  // Add headers and their categories - include all headers even if empty
   Array.from(headers.entries())
     .sort(([a], [b]) => parseInt(a) - parseInt(b))
     .forEach(([code, { label, categories }]) => {
+      // Include all headers, even if they have no categories
+      result.push(`_${code} "${label}"`);
+      result.push("{");
       if (categories.length > 0) {
-        result.push(`_${code} "${label}"`);
-        result.push("{");
         result.push(...categories.map((cat, i) => cat + (i < categories.length - 1 ? "," : "")));
-        result.push("},");
       }
+      result.push("},");
     });
 
   // Always add the _1000 header with the "Other (specify)" entry
@@ -568,6 +569,7 @@ function parseListToExcelRows(list: string[]): any[] {
 function parseDiaryCategories(list: string[]): any[] {
   console.log("Parsing diary categories:", list);
   
+  debugger;
   // If the list is empty or only contains the define and empty structure, return empty array
   if (list.length <= 3) {
     console.warn("Diary categories list is empty or minimal");
@@ -770,27 +772,15 @@ function parseDiaryCategories(list: string[]): any[] {
 
 // Helper function to process items within a diary category block
 function processBlockItems(itemsText: string, header: { id: string; text: string }, rows: any[], defaultValues: any) {
-  // Split by commas at end of lines, but be careful not to split inside the ContainersCodes section
-  const items = [];
-  let currentItem = '';
-  let insideContainer = false;
+  // Split by `],` pattern which correctly marks the end of each category entry
+  const splitItems = itemsText.split('],');
+  const items = splitItems.map(item => item.trim()).filter(item => item);
   
-  for (const char of itemsText) {
-    if (char === '[') insideContainer = true;
-    if (char === ']') insideContainer = false;
-    
-    if (char === ',' && !insideContainer) {
-      // Found a comma separating items
-      items.push(currentItem.trim());
-      currentItem = '';
-    } else {
-      currentItem += char;
+  // Add back the closing bracket for all but the last item
+  for (let i = 0; i < items.length; i++) {
+    if (!items[i].endsWith(']')) {
+      items[i] = items[i] + ']';
     }
-  }
-  
-  // Add the last item
-  if (currentItem.trim()) {
-    items.push(currentItem.trim());
   }
   
   for (const item of items) {
