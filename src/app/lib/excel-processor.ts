@@ -569,7 +569,6 @@ function parseListToExcelRows(list: string[]): any[] {
 function parseDiaryCategories(list: string[]): any[] {
   console.log("Parsing diary categories:", list);
   
-  debugger;
   // If the list is empty or only contains the define and empty structure, return empty array
   if (list.length <= 3) {
     console.warn("Diary categories list is empty or minimal");
@@ -728,9 +727,21 @@ function parseDiaryCategories(list: string[]): any[] {
     return row;
   });
 
-  // Add the _1000 header if it doesn't exist
-  let localHeaderPosition = headerPositions.get('_1000');
-  if (!has1000Header && processedRows.length > 0) {
+  // Check if entries with code 1000 and 1004 exist
+  let code1000Entry = processedRows.find(row => row['Object Name'] === '_1000');
+  let code1004Entry = processedRows.find(row => row['Object Name'] === '_1004');
+  let localHeaderPosition = code1000Entry ? code1000Entry['Position'] : null;
+
+  // Update or add the _1000 header with required properties
+  if (code1000Entry) {
+    // Update the existing 1000 header with required properties
+    code1000Entry['Text'] = 'Local, traditional or other type of drink';
+    code1000Entry['Display As Header'] = '1';
+    code1000Entry['No Filter'] = '1';
+    code1000Entry['Extended Properties'] = '{}';
+    code1000Entry['Fixed To Position'] = '1';
+  } else if (processedRows.length > 0) {
+    // Add the 1000 header if it doesn't exist
     const newPosition = processedRows.length + 1;
     processedRows.push({
       'Position': newPosition,
@@ -740,13 +751,30 @@ function parseDiaryCategories(list: string[]): any[] {
       'Display As Header': '1',
       'No Filter': '1',
       'Extended Properties': '{}',
-      ...defaultValues
+      ...defaultValues,
+      'Fixed To Position': '1'
     });
     localHeaderPosition = newPosition;
   }
 
-  // Add the "Other (specify)" row at the end if we have any rows and haven't already added it
-  if (processedRows.length > 0 && !hasOtherSpecify) {
+  // Update or add the "Other (specify)" entry with required properties
+  if (code1004Entry) {
+    // Update the existing 1004 entry with required properties
+    code1004Entry['Text'] = 'Other (specify)';
+    code1004Entry['Group ID'] = localHeaderPosition ? localHeaderPosition.toString() : '';
+    code1004Entry['Display As Header'] = '0';
+    code1004Entry['No Filter'] = '0';
+    code1004Entry['Extended Properties'] = '{"ContainersCode":""}';
+    code1004Entry['Is Other'] = '1';
+    code1004Entry['Other field Object Name'] = '_1004';
+    code1004Entry['Text Field Type'] = '2';
+    code1004Entry['Data Type'] = '3';
+    code1004Entry['Precision/Length'] = '4000';
+    code1004Entry['Scale'] = '0';
+    code1004Entry['Visualization'] = '1';
+    code1004Entry['Fixed To Position'] = '1';
+  } else if (processedRows.length > 0) {
+    // Add the "Other (specify)" entry if it doesn't exist
     processedRows.push({
       'Position': processedRows.length + 1,
       'Text': 'Other (specify)',
