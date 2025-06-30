@@ -16,7 +16,7 @@ interface LinkItem {
 const materialsLinks: LinkItem[] = [
   {
     title: "Master Questionnaire",
-    url: "https://ipsosgroup.sharepoint.com/:w:/r/teams/MSU-COKE-SmallMarketSolution-TEAM/Shared%20Documents/General/OPS_FILES/Q2%202025/Questionnaire/SMS%20Coke%20Master%20Questionnaire_Q2_2025_V1.docx?d=w30645244478f4f208532c45beb3b453f&csf=1&web=1&e=n6TUS4",
+    url: "https://ipsosgroup.sharepoint.com/:w:/r/teams/MSU-COKE-SmallMarketSolution-TEAM/Shared%20Documents/General/OPS_FILES/Q3%202025/Questionnaire/SMS%20Coke%20Master%20Questionnaire_Q2_2025_V1.docx?d=w30645244478f4f208532c45beb3b453f&csf=1&web=1&e=n6TUS4",
     description: "Q2 2025 / 25-004044-01-30"
   },
   {
@@ -36,7 +36,7 @@ const materialsLinks: LinkItem[] = [
   },
   {
     title: "Offline Market Info",
-    url: "https://ipsosgroup.sharepoint.com/:x:/r/teams/MSU-COKE-SmallMarketSolution-TEAM/Shared%20Documents/General/OPS_FILES/Q2%202025/Fieldwork%20coordination/Offline/Coke%20SMS%20EU%20Q2%202025-%20offline%20Market%20info.xlsx?d=wcea8ffa57f404e109082a17d9c48c59c&csf=1&web=1&e=ZNHKyT",
+    url: "https://ipsosgroup.sharepoint.com/:x:/r/teams/MSU-COKE-SmallMarketSolution-TEAM/Shared%20Documents/General/OPS_FILES/Q3%202025/Fieldwork%20coordination/Offline/Coke%20SMS%20EU%20Q3%202025-%20offline%20Market%20info.xlsx?d=wcea8ffa57f404e109082a17d9c48c59c&csf=1&web=1&e=ZNHKyT",
     description: "iField INFO (NWB info, BC+SAR, Variables to transfer)"
   },
   {
@@ -46,7 +46,7 @@ const materialsLinks: LinkItem[] = [
   },
   {
     title: "Quotas",
-    url: "https://ipsosgroup.sharepoint.com/:x:/r/teams/MSU-COKE-SmallMarketSolution-TEAM/Shared%20Documents/General/OPS_FILES/Q2%202025/Quotas/EU%20SMS%20Quotas%20Online%20-%20Q2%202025_v1.xlsx?d=w9847f0a9c02a4377a74aaa0360e1a8b3&csf=1&web=1&e=aIX2Qq",
+    url: "https://ipsosgroup.sharepoint.com/:x:/r/teams/MSU-COKE-SmallMarketSolution-TEAM/Shared%20Documents/General/OPS_FILES/Q3%202025/Quotas/EU%20SMS%20Quotas%20Online%20-%20Q3%202025_v1.xlsx?d=w9847f0a9c02a4377a74aaa0360e1a8b3&csf=1&web=1&e=aIX2Qq",
     description: "Dim QUOTAS"
   }
 ]
