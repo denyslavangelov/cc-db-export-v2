@@ -157,7 +157,7 @@ export default function Checklist() {
   const [checklist, setChecklist] = useState<ChecklistItem[]>(defaultChecklist)
   const [progress, setProgress] = useState(0)
 
-  const countTotalItems = (items: ChecklistItem[]): number => {
+  const countTotalItems = useCallback((items: ChecklistItem[]): number => {
     let count = items.length
     items.forEach(item => {
       if (item.subItems) {
@@ -165,9 +165,9 @@ export default function Checklist() {
       }
     })
     return count
-  }
+  }, [])
 
-  const countCheckedItems = (items: ChecklistItem[]): number => {
+  const countCheckedItems = useCallback((items: ChecklistItem[]): number => {
     let count = 0
     items.forEach(item => {
       if (item.checked) count++
@@ -176,7 +176,7 @@ export default function Checklist() {
       }
     })
     return count
-  }
+  }, [])
 
   const calculateProgress = useCallback(() => {
     const totalItems = countTotalItems(checklist)
