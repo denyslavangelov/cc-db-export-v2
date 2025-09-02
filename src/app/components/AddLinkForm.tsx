@@ -89,7 +89,7 @@ export default function AddLinkForm({ onAdd }: AddLinkFormProps) {
             </div>
             <h3 className="text-base font-semibold text-gray-100">Add New Link</h3>
           </div>
-          <button
+          <motion.button
             type="button"
             onClick={handleCancel}
             className="p-1.5 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded-lg transition-all duration-200"
@@ -97,7 +97,7 @@ export default function AddLinkForm({ onAdd }: AddLinkFormProps) {
             whileTap={{ scale: 0.9 }}
           >
             <X className="w-4 h-4" />
-          </button>
+          </motion.button>
         </div>
         
         {/* Form fields */}

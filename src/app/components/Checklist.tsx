@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { CheckSquare, Square, RotateCcw, FileText, CheckCircle2 } from 'lucide-react'
 import { cn } from '@/app/utils/cn'
@@ -157,26 +157,6 @@ export default function Checklist() {
   const [checklist, setChecklist] = useState<ChecklistItem[]>(defaultChecklist)
   const [progress, setProgress] = useState(0)
 
-  // Load checklist from localStorage on component mount
-  useEffect(() => {
-    const savedChecklist = localStorage.getItem('coca-cola-checklist')
-    if (savedChecklist) {
-      setChecklist(JSON.parse(savedChecklist))
-    }
-  }, [])
-
-  // Save checklist to localStorage whenever it changes
-  useEffect(() => {
-    localStorage.setItem('coca-cola-checklist', JSON.stringify(checklist))
-    calculateProgress()
-  }, [checklist])
-
-  const calculateProgress = () => {
-    const totalItems = countTotalItems(checklist)
-    const checkedItems = countCheckedItems(checklist)
-    setProgress(Math.round((checkedItems / totalItems) * 100))
-  }
-
   const countTotalItems = (items: ChecklistItem[]): number => {
     let count = items.length
     items.forEach(item => {
@@ -197,6 +177,26 @@ export default function Checklist() {
     })
     return count
   }
+
+  const calculateProgress = useCallback(() => {
+    const totalItems = countTotalItems(checklist)
+    const checkedItems = countCheckedItems(checklist)
+    setProgress(Math.round((checkedItems / totalItems) * 100))
+  }, [checklist, countTotalItems, countCheckedItems])
+
+  // Load checklist from localStorage on component mount
+  useEffect(() => {
+    const savedChecklist = localStorage.getItem('coca-cola-checklist')
+    if (savedChecklist) {
+      setChecklist(JSON.parse(savedChecklist))
+    }
+  }, [])
+
+  // Save checklist to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('coca-cola-checklist', JSON.stringify(checklist))
+    calculateProgress()
+  }, [checklist, calculateProgress])
 
   const toggleItem = (id: string, items: ChecklistItem[]): ChecklistItem[] => {
     return items.map(item => {
