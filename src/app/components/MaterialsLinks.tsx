@@ -17,6 +17,7 @@ export default function MaterialsLinks() {
   const [links, setLinks] = useState<MaterialsLink[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   // Fetch links on component mount
   useEffect(() => {
@@ -25,10 +26,33 @@ export default function MaterialsLinks() {
 
   const fetchLinks = async () => {
     try {
-      const fetchedLinks = await materialsApi.getAll()
-      setLinks(fetchedLinks)
+      setIsLoading(true)
+      const response = await materialsApi.getAll()
+      if (response) {
+        setLinks(response)
+      }
     } catch (error) {
-      toast.error(`Failed to fetch links: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      console.error('Error fetching links:', error)
+      setError('Failed to fetch materials. Please try again.')
+      // Fallback to default links if API fails
+      setLinks([
+        {
+          id: "1",
+          title: "CCDB Export Tool",
+          url: "https://cc-db-export.vercel.app",
+          description: "Main export tool for generating CSV and text files",
+          lastUpdated: new Date().toISOString(),
+          updatedBy: "System"
+        },
+        {
+          id: "2", 
+          title: "SharePoint Directory",
+          url: "https://ipsosgroup.sharepoint.com/teams/MSU-COKE-SmallMarketSolution-TEAM/Shared%20Documents/Forms/AllItems.aspx?FolderCTID=0x0120003F91AC7BBE846B44835EC129AE411B38&id=%2Fteams%2FMSU-COKE-SmallMarketSolution-TEAM%2FShared+Documents%2FGeneral%2FOPS_FILES&OR=Teams-HL&CT=1730392210797",
+          description: "Access to project files and resources",
+          lastUpdated: new Date().toISOString(),
+          updatedBy: "System"
+        }
+      ])
     } finally {
       setIsLoading(false)
     }
@@ -120,6 +144,13 @@ export default function MaterialsLinks() {
           "shadow-2xl",
           "border border-gray-700/30"
         )}>
+          {/* Error Display */}
+          {error && (
+            <div className="mb-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg">
+              <p className="text-red-300 text-sm">{error}</p>
+            </div>
+          )}
+
           {/* Add new link form */}
           <div className="mb-4">
             <AddLinkForm onAdd={handleAdd} />

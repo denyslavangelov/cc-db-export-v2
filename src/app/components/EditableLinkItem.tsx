@@ -37,12 +37,10 @@ export default function EditableLinkItem({
 
     setIsSaving(true);
     try {
-      const updatedLink = await materialsApi.update({
-        ...link,
+      const updatedLink = await materialsApi.update(link.id, {
         title: formData.title.trim(),
         url: formData.url.trim(),
-        description: formData.description.trim() || undefined,
-        updatedBy: 'User' // In a real app, this would come from user authentication
+        description: formData.description.trim() || undefined
       });
       
       onUpdate(updatedLink);

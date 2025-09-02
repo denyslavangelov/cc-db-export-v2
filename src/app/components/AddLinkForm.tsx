@@ -33,8 +33,7 @@ export default function AddLinkForm({ onAdd }: AddLinkFormProps) {
       const newLink = await materialsApi.create({
         title: formData.title.trim(),
         url: formData.url.trim(),
-        description: formData.description.trim() || undefined,
-        updatedBy: 'User' // In a real app, this would come from user authentication
+        description: formData.description.trim() || undefined
       });
       
       onAdd(newLink);
