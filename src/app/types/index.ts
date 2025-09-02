@@ -22,10 +22,12 @@ export interface CountryCodes {
   }
 
   export interface MaterialsLink {
-    id: string;
-    title: string;
-    url: string;
-    description?: string;
-    lastUpdated: string;
-    updatedBy?: string;
+    id: string
+    title: string
+    url: string
+    description?: string
+    quarter: string // Q1, Q2, Q3, Q4
+    year: number // 2024, 2025, etc.
+    lastUpdated: string
+    updatedBy?: string
   } 

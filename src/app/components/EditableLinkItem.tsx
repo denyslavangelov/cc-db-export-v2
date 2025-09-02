@@ -15,17 +15,21 @@ interface EditableLinkItemProps {
   onEditToggle: () => void;
 }
 
-export default function EditableLinkItem({ 
-  link, 
-  onUpdate, 
-  onDelete, 
-  isEditing, 
-  onEditToggle 
-}: EditableLinkItemProps) {
-  const [formData, setFormData] = useState({
+interface FormData {
+  title: string
+  url: string
+  description: string
+  quarter: string
+  year: number
+}
+
+export default function EditableLinkItem({ link, onUpdate, onDelete, isEditing, onEditToggle }: EditableLinkItemProps) {
+  const [formData, setFormData] = useState<FormData>({
     title: link.title,
     url: link.url,
-    description: link.description || ''
+    description: link.description || '',
+    quarter: link.quarter,
+    year: link.year
   });
   const [isSaving, setIsSaving] = useState(false);
 
@@ -40,7 +44,9 @@ export default function EditableLinkItem({
       const updatedLink = await materialsApi.update(link.id, {
         title: formData.title.trim(),
         url: formData.url.trim(),
-        description: formData.description.trim() || undefined
+        description: formData.description.trim() || undefined,
+        quarter: formData.quarter,
+        year: formData.year
       });
       
       onUpdate(updatedLink);
@@ -57,7 +63,9 @@ export default function EditableLinkItem({
     setFormData({
       title: link.title,
       url: link.url,
-      description: link.description || ''
+      description: link.description || '',
+      quarter: link.quarter,
+      year: link.year
     });
     onEditToggle();
   };
@@ -121,6 +129,42 @@ export default function EditableLinkItem({
                 placeholder="Description (optional)"
                 className="w-full px-3 py-2 bg-gray-700/50 border border-gray-600 rounded-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm"
               />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-300 mb-1.5">
+                  Quarter <span className="text-red-400">*</span>
+                </label>
+                <select
+                  value={formData.quarter}
+                  onChange={(e) => setFormData(prev => ({ ...prev, quarter: e.target.value }))}
+                  required
+                  className="w-full px-3 py-2 bg-gray-700/50 border border-gray-600 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm"
+                >
+                  <option value="Q1">Q1</option>
+                  <option value="Q2">Q2</option>
+                  <option value="Q3">Q3</option>
+                  <option value="Q4">Q4</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-xs font-medium text-gray-300 mb-1.5">
+                  Year <span className="text-red-400">*</span>
+                </label>
+                <select
+                  value={formData.year}
+                  onChange={(e) => setFormData(prev => ({ ...prev, year: parseInt(e.target.value) }))}
+                  required
+                  className="w-full px-3 py-2 bg-gray-700/50 border border-gray-600 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm"
+                >
+                  <option value={2024}>2024</option>
+                  <option value={2025}>2025</option>
+                  <option value={2026}>2026</option>
+                  <option value={2027}>2027</option>
+                </select>
+              </div>
             </div>
           </div>
           

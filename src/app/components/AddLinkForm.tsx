@@ -8,17 +8,29 @@ import { materialsApi } from '@/app/lib/materials-api';
 import { toast } from 'sonner';
 
 interface AddLinkFormProps {
-  onAdd: (newLink: MaterialsLink) => void;
+  onAdd: (newLink: MaterialsLink) => void
+  defaultQuarter?: string
+  defaultYear?: number
 }
 
-export default function AddLinkForm({ onAdd }: AddLinkFormProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [formData, setFormData] = useState({
+interface FormData {
+  title: string
+  url: string
+  description: string
+  quarter: string
+  year: number
+}
+
+export default function AddLinkForm({ onAdd, defaultQuarter = 'Q2', defaultYear = 2025 }: AddLinkFormProps) {
+  const [isExpanded, setIsExpanded] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [formData, setFormData] = useState<FormData>({
     title: '',
     url: '',
-    description: ''
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
+    description: '',
+    quarter: defaultQuarter,
+    year: defaultYear
+  })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,11 +45,13 @@ export default function AddLinkForm({ onAdd }: AddLinkFormProps) {
       const newLink = await materialsApi.create({
         title: formData.title.trim(),
         url: formData.url.trim(),
-        description: formData.description.trim() || undefined
+        description: formData.description.trim() || undefined,
+        quarter: formData.quarter,
+        year: formData.year
       });
       
       onAdd(newLink);
-      setFormData({ title: '', url: '', description: '' });
+      setFormData({ title: '', url: '', description: '', quarter: defaultQuarter, year: defaultYear });
       setIsExpanded(false);
       toast.success('Link added successfully');
     } catch (error) {
@@ -48,7 +62,7 @@ export default function AddLinkForm({ onAdd }: AddLinkFormProps) {
   };
 
   const handleCancel = () => {
-    setFormData({ title: '', url: '', description: '' });
+    setFormData({ title: '', url: '', description: '', quarter: defaultQuarter, year: defaultYear });
     setIsExpanded(false);
   };
 
@@ -140,6 +154,42 @@ export default function AddLinkForm({ onAdd }: AddLinkFormProps) {
               placeholder="Brief description"
               className="w-full px-3 py-2 bg-gray-700/50 border border-gray-600 rounded-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 text-sm"
             />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-300 mb-1.5">
+                Quarter <span className="text-red-400">*</span>
+              </label>
+              <select
+                value={formData.quarter}
+                onChange={(e) => setFormData(prev => ({ ...prev, quarter: e.target.value }))}
+                required
+                className="w-full px-3 py-2 bg-gray-700/50 border border-gray-600 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 text-sm"
+              >
+                <option value="Q1">Q1</option>
+                <option value="Q2">Q2</option>
+                <option value="Q3">Q3</option>
+                <option value="Q4">Q4</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-xs font-medium text-gray-300 mb-1.5">
+                Year <span className="text-red-400">*</span>
+              </label>
+              <select
+                value={formData.year}
+                onChange={(e) => setFormData(prev => ({ ...prev, year: parseInt(e.target.value) }))}
+                required
+                className="w-full px-3 py-2 bg-gray-700/50 border border-gray-600 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 text-sm"
+              >
+                <option value={2024}>2024</option>
+                <option value={2025}>2025</option>
+                <option value={2026}>2026</option>
+                <option value={2027}>2027</option>
+              </select>
+            </div>
           </div>
         </div>
         
