@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Loader2, Check, FileSpreadsheet, Upload, Sparkles, FileUp, FolderOpen, File, ExternalLink } from "lucide-react"
+import { Loader2, Check, FileSpreadsheet, Upload, Sparkles, FileUp, FolderOpen, File, ExternalLink, ArrowRight } from "lucide-react"
 import confetti from "canvas-confetti"
 import { cn } from "@/app/utils/cn"
 import { processExcelFile } from "@/app/lib/excel-processor"
@@ -162,155 +162,94 @@ export default function SaveButton() {
             </div>
           </div>
 
-          {/* Upload Section - Primary Priority */}
-          <div className="text-center mb-6">
-            <div className="relative w-full flex justify-center">
+          {/* Upload Section */}
+          <div className="mb-8">
+            <motion.div
+              className="group relative w-full max-w-sm mx-auto overflow-hidden rounded-xl bg-gradient-to-r from-amber-500/80 to-amber-600/80 p-0.5 shadow-lg transition-all duration-300 hover:shadow-amber-500/20"
+              onDragOver={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+              }}
+              onDrop={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                const file = e.dataTransfer.files[0]
+                if (file && (file.name.endsWith('.xlsx') || file.name.endsWith('.xls'))) {
+                  handleFileUpload(file)
+                }
+              }}
+            >
               <motion.button
                 onClick={() => fileInputRef.current?.click()}
-                animate={status}
-                variants={buttonVariants}
-                className={cn(
-                  "group relative grid overflow-hidden rounded-xl px-10 py-5 transition-all duration-300 cursor-pointer",
-                  "hover:shadow-2xl hover:shadow-amber-500/25",
-                  "bg-gradient-to-r from-amber-600/80 to-amber-700/80 hover:from-amber-600 hover:to-amber-700",
-                  "border border-amber-500/30 hover:border-amber-400/50"
-                )}
-                style={{ minWidth: "220px" }}
+                className="relative w-full"
                 whileHover={{ 
-                  scale: 1.05, 
-                  y: -3,
-                  transition: { 
-                    type: "spring", 
-                    stiffness: 400, 
-                    damping: 10 
-                  }
+                  y: -1,
+                  transition: { duration: 0.2, ease: "easeOut" }
                 }}
                 whileTap={{ 
-                  scale: 0.95, 
                   y: 0,
-                  transition: { 
-                    type: "spring", 
-                    stiffness: 400, 
-                    damping: 10 
-                  }
+                  scale: 0.98,
+                  transition: { duration: 0.1, ease: "easeInOut" }
                 }}
               >
-                {/* Glow effect on hover */}
-                <motion.div
-                  className="absolute inset-0 rounded-xl bg-gradient-to-r from-amber-400/20 to-amber-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                  initial={{ opacity: 0 }}
-                  whileHover={{ opacity: 1 }}
-                />
-                
-                {/* Animated border glow */}
-                <motion.div
-                  className="absolute inset-0 rounded-xl bg-gradient-to-r from-amber-400/40 via-amber-500/40 to-amber-400/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                  initial={{ opacity: 0 }}
-                  whileHover={{ opacity: 1 }}
-                  animate={{
-                    background: [
-                      "linear-gradient(45deg, rgba(245, 158, 11, 0.4), rgba(245, 158, 11, 0.4))",
-                      "linear-gradient(45deg, rgba(245, 158, 11, 0.4), rgba(217, 119, 6, 0.4), rgba(245, 158, 11, 0.4))",
-                      "linear-gradient(45deg, rgba(245, 158, 11, 0.4), rgba(245, 158, 11, 0.4))"
-                    ]
-                  }}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                  }}
-                />
-
-                {status === "idle" && (
-                  <span
-                    className={cn(
-                      "spark mask-gradient absolute inset-0 h-[100%] w-[100%] animate-flip overflow-hidden rounded-xl",
-                      "[mask:linear-gradient(white,_transparent_50%)] before:absolute before:aspect-square before:w-[200%] before:bg-[conic-gradient(from_0deg,transparent_0_340deg,white_360deg)]",
-                      "before:rotate-[-90deg] before:animate-rotate",
-                      "before:content-[''] before:[inset:0_auto_auto_50%] before:[translate:-50%_-15%]",
-                    )}
-                  />
-                )}
-                <span
-                  className={cn(
-                    "backdrop absolute inset-px rounded-[22px] transition-colors duration-200",
-                    status === "idle" ? "bg-amber-600/80 group-hover:bg-amber-600" : "",
-                  )}
-                />
-                <span className="z-10 flex items-center justify-center gap-2 text-lg font-semibold text-gray-200">
-                  <AnimatePresence mode="wait">
-                    {status === "saving" && (
-                      <motion.span
-                        key="saving"
-                        initial={{ opacity: 0, rotate: 0 }}
-                        animate={{ opacity: 1, rotate: 360 }}
-                        exit={{ opacity: 0 }}
-                        transition={{
-                          duration: 0.3,
-                          rotate: { repeat: Number.POSITIVE_INFINITY, duration: 1, ease: "linear" },
-                        }}
-                      >
-                        <Loader2 className="w-6 h-6" />
-                      </motion.span>
-                    )}
-                    {status === "saved" && (
-                      <motion.span
-                        key="saved"
-                        initial={{ opacity: 0, scale: 0.5 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0 }}
-                      >
-                        <Check className="w-6 h-6" />
-                      </motion.span>
-                    )}
-                  </AnimatePresence>
-                  <motion.span
-                    key={status}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.2 }}
-                    className="flex items-center gap-2"
-                  >
-                    {status === "idle" && (
-                      <motion.div
-                        whileHover={{ 
-                          rotate: [0, -10, 10, 0],
-                          transition: { duration: 0.3 }
-                        }}
-                      >
-                        <Upload className="w-6 h-6" />
-                      </motion.div>
-                    )}
-                    {status === "idle" ? "Upload Package" : status === "saving" ? "Processing..." : "Exported!"}
-                  </motion.span>
-                </span>
-              </motion.button>
-
-              <AnimatePresence>
-                {bounce && (
+                <div className="relative flex items-center justify-center gap-3 px-6 py-4 bg-gray-900 rounded-xl transition-all duration-300 group-hover:bg-gray-800">
+                  {/* Subtle background glow */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-amber-500/10 to-amber-600/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  
+                  {/* Icon with minimal animation */}
                   <motion.div
-                    className="absolute top-0 right-0 -mr-1 -mt-1"
-                    initial="initial"
-                    animate="animate"
-                    exit="exit"
-                    variants={sparkleVariants}
+                    className="relative z-10"
+                    animate={{ rotate: [0, 2, -2, 0] }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                   >
-                    <Sparkles className="w-6 h-6 text-yellow-400" />
+                    <Upload className="w-6 h-6 text-amber-400 group-hover:text-amber-300 transition-colors duration-300" />
                   </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+                  
+                  {/* Text content */}
+                  <div className="relative z-10 text-left">
+                    <div className="text-lg font-semibold text-white group-hover:text-amber-50 transition-colors duration-300">
+                      Upload Package
+                    </div>
+                    <div className="text-xs text-amber-200/70 group-hover:text-amber-200 transition-colors duration-300">
+                      Select Excel files
+                    </div>
+                  </div>
+                  
+                  {/* Subtle arrow indicator */}
+                  <motion.div
+                    className="relative z-10 ml-auto"
+                    animate={{ x: [0, 2, 0] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                  >
+                    <ArrowRight className="w-4 h-4 text-amber-300/80 group-hover:text-amber-200 transition-colors duration-300" />
+                  </motion.div>
+                  
+                  {/* Subtle hover effect */}
+                  <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/5 to-transparent group-hover:translate-x-full transition-transform duration-500 ease-out" />
+                </div>
+              </motion.button>
+            </motion.div>
+          </div>
 
-            {/* Instructions */}
-            <div className="mt-4 text-center">
-              <p className="text-sm text-gray-400 mb-2">
-                Supported format: <span className="text-gray-300 font-medium">.xlsx</span>
-              </p>
-              <p className="text-xs text-gray-500">
-                Drag and drop your Excel file or click to browse
-              </p>
-            </div>
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".xlsx,.xls"
+            onChange={(e) => {
+              const file = e.target.files?.[0]
+              if (file) {
+                handleFileUpload(file)
+              }
+            }}
+            className="hidden"
+          />
+
+          {/* Instructions */}
+          <div className="mt-4 text-center">
+            <p className="text-sm text-gray-400 mb-2">
+              Supported format: <span className="text-gray-300 font-medium">.xlsx</span>
+            </p>
           </div>
 
           {/* Quick Actions - Tertiary Priority */}

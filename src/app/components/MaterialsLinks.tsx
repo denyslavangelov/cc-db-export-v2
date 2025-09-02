@@ -182,50 +182,6 @@ export default function MaterialsLinks() {
             </div>
           )}
 
-          {/* Quick Filter Buttons */}
-          <div className="mb-4 flex flex-wrap gap-2">
-            <button
-              onClick={() => { setSelectedQuarter(currentQuarter); setSelectedYear(currentYear); }}
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                selectedQuarter === currentQuarter && selectedYear === currentYear
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50'
-              }`}
-            >
-              Current: {currentQuarter} {currentYear}
-            </button>
-            <button
-              onClick={() => { setSelectedQuarter('Q2'); setSelectedYear(2025); }}
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                selectedQuarter === 'Q2' && selectedYear === 2025
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50'
-              }`}
-            >
-              Q2 2025
-            </button>
-            <button
-              onClick={() => { setSelectedQuarter('Q3'); setSelectedYear(2025); }}
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                selectedQuarter === 'Q3' && selectedYear === 2025
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50'
-              }`}
-            >
-              Q3 2025
-            </button>
-            <button
-              onClick={() => { setSelectedQuarter('All'); setSelectedYear(0); }}
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                selectedQuarter === 'All' && selectedYear === 0
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50'
-              }`}
-            >
-              Show All
-            </button>
-          </div>
-
           {/* Filters */}
           <div className="mb-6 p-4 bg-gray-700/30 rounded-xl border border-gray-600/30">
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
