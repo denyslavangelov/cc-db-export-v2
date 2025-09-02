@@ -161,9 +161,6 @@ export default function MaterialsLinks() {
           <h1 className="text-4xl font-bold text-gray-100 tracking-tight mb-2">
             Materials Links
           </h1>
-          <p className="text-base text-gray-400 tracking-wide mb-3">
-            Q2 2025 / 25-004044-01-30
-          </p>
           <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
             <Settings className="w-4 h-4" />
             <span>Click on any link to edit or add new ones below</span>
