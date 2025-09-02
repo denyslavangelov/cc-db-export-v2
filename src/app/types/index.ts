@@ -19,4 +19,13 @@ export interface CountryCodes {
     imageryList: string[];
     diaryCategories: string[];
     fullList: string[];
+  }
+
+  export interface MaterialsLink {
+    id: string;
+    title: string;
+    url: string;
+    description?: string;
+    lastUpdated: string;
+    updatedBy?: string;
   } 

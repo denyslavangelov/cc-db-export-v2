@@ -3,15 +3,16 @@
 import { useState } from "react"
 import SaveButton from "@/app/components/SaveButton"
 import MaterialsLinks from "@/app/components/MaterialsLinks"
+import Checklist from "@/app/components/Checklist"
 import { motion } from "framer-motion"
-import { FileSpreadsheet, FileText } from "lucide-react"
+import { FileSpreadsheet, FileText, CheckCircle2 } from "lucide-react"
 import { cn } from "@/app/utils/cn"
 import { Geologica } from 'next/font/google'
 
 const geologica = Geologica({ subsets: ['latin'] })
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<"export" | "materials">("export")
+  const [activeTab, setActiveTab] = useState<"export" | "materials" | "checklist">("export")
 
   return (
     <main className={cn("min-h-screen bg-gray-900", geologica.className)}>
@@ -47,10 +48,26 @@ export default function Home() {
           <FileText className="w-5 h-5" />
           <span>Materials</span>
         </motion.button>
+
+        <motion.button
+          onClick={() => setActiveTab("checklist")}
+          className={cn(
+            "flex items-center gap-2 px-6 py-3 rounded-full",
+            "transition-all duration-200",
+            activeTab === "checklist"
+              ? "bg-gray-800 text-gray-100"
+              : "bg-gray-800/50 text-gray-400 hover:bg-gray-700/50"
+          )}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <CheckCircle2 className="w-5 h-5" />
+          <span>Checklist</span>
+        </motion.button>
       </div>
 
       <div className="mt-8">
-        {activeTab === "export" ? <SaveButton /> : <MaterialsLinks />}
+        {activeTab === "export" ? <SaveButton /> : activeTab === "materials" ? <MaterialsLinks /> : <Checklist />}
       </div>
     </main>
   )

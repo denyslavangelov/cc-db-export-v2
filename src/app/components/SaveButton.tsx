@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Loader2, Check, FileSpreadsheet, Upload, Sparkles, FileUp, FolderOpen, File } from "lucide-react"
+import { Loader2, Check, FileSpreadsheet, Upload, Sparkles, FileUp, FolderOpen, File, ExternalLink } from "lucide-react"
 import confetti from "canvas-confetti"
 import { cn } from "@/app/utils/cn"
 import { processExcelFile } from "@/app/lib/excel-processor"
@@ -117,147 +117,213 @@ export default function SaveButton() {
 
   return (
     <div className={cn(
-      "min-h-screen flex flex-col items-center justify-center gap-4 bg-gray-900",
+      "min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900",
       geologica.className
     )}>
-      <motion.button
-        onClick={() => window.open("https://ipsosgroup.sharepoint.com/teams/MSU-COKE-SmallMarketSolution-TEAM/Shared%20Documents/Forms/AllItems.aspx?id=%2Fteams%2FMSU%2DCOKE%2DSmallMarketSolution%2DTEAM%2FShared%20Documents%2FGeneral%2FOPS%5FFILES&viewid=ff457430%2D3660%2D48e3%2Da7f5%2D9a7de8a333cb", "_blank")}
-        className={cn(
-          "flex items-center gap-2 px-4 py-2 rounded-full",
-          "bg-gray-800/50 text-gray-200",
-          "hover:bg-gray-700/50 transition-all duration-200 cursor-pointer",
-          "border border-gray-700/50",
-          "backdrop-blur-sm"
-        )}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-      >
-        <FolderOpen className="w-4 h-4" />
-        <span className="text-sm">Open Packages Directory</span>
-      </motion.button>
-
-      <div className="w-full max-w-2xl p-8 mx-auto">
-        <div className={cn(
-          "rounded-2xl p-8",
-          "bg-gray-800/50",
-          "backdrop-blur-xl",
-          "shadow-2xl"
-        )}>
-          <div className="flex flex-col items-center gap-6">
-            <div className="text-center space-y-2">
-              <div className="flex items-center justify-center gap-2 mb-4">
-                <FileSpreadsheet className="w-8 h-8 text-blue-400" />
-              </div>
-              <h4 className="text-3xl font-semibold text-gray-100 tracking-tight">
-                CC Package Export
-              </h4>
-              <p className="text-xs text-gray-400 flex items-center justify-center gap-2 tracking-wide">
-                Please upload the latest package
-              </p>
+      <div className="w-full max-w-2xl p-4 mx-auto pt-6">
+        {/* Header Section */}
+        <div className="text-center mb-6">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="p-3 bg-amber-500/15 rounded-2xl">
+              <FileSpreadsheet className="w-10 h-10 text-amber-400/80" />
             </div>
+          </div>
+          <h1 className="text-4xl font-bold text-gray-100 tracking-tight mb-2">
+            CC Package Export
+          </h1>
+          <p className="text-base text-gray-400 tracking-wide mb-3">
+            Export your data packages with ease
+          </p>
+        </div>
 
-            <div className="flex flex-col gap-6 mt-4">
-              <div className="flex items-center space-x-3 bg-gray-800 bg-opacity-30 px-4 py-3 rounded-lg border border-gray-700/50">
-                <Checkbox
-                  id="exportFormat"
-                  checked={exportInXlsx}
-                  onCheckedChange={(checked) => setExportInXlsx(checked as boolean)}
-                  className="border-gray-500 data-[state=checked]:bg-gray-50 data-[state=checked]:text-gray-900 cursor-pointer"
+        {/* Main Content */}
+        <div className={cn(
+          "rounded-3xl p-6",
+          "bg-gray-800/60",
+          "backdrop-blur-xl",
+          "shadow-2xl",
+          "border border-gray-700/30"
+        )}>
+          {/* Export Configuration - Secondary Priority */}
+          <div className="mb-6">
+            <div className="flex items-center justify-center space-x-3 bg-gray-700/20 px-4 py-3 rounded-xl border border-gray-600/30 w-fit mx-auto">
+              <Checkbox
+                id="exportFormat"
+                checked={exportInXlsx}
+                onCheckedChange={(checked) => setExportInXlsx(checked as boolean)}
+                className="border-gray-500 data-[state=checked]:bg-gray-50 data-[state=checked]:text-gray-900 cursor-pointer"
+              />
+              <Label 
+                htmlFor="exportFormat" 
+                className="text-gray-300 font-medium select-none cursor-pointer text-sm"
+              >
+                Export for iField (CSV)
+              </Label>
+            </div>
+          </div>
+
+          {/* Upload Section - Primary Priority */}
+          <div className="text-center mb-6">
+            <div className="relative w-full flex justify-center">
+              <motion.button
+                onClick={() => fileInputRef.current?.click()}
+                animate={status}
+                variants={buttonVariants}
+                className={cn(
+                  "group relative grid overflow-hidden rounded-xl px-10 py-5 transition-all duration-300 cursor-pointer",
+                  "hover:shadow-2xl hover:shadow-amber-500/25",
+                  "bg-gradient-to-r from-amber-600/80 to-amber-700/80 hover:from-amber-600 hover:to-amber-700",
+                  "border border-amber-500/30 hover:border-amber-400/50"
+                )}
+                style={{ minWidth: "220px" }}
+                whileHover={{ 
+                  scale: 1.05, 
+                  y: -3,
+                  transition: { 
+                    type: "spring", 
+                    stiffness: 400, 
+                    damping: 10 
+                  }
+                }}
+                whileTap={{ 
+                  scale: 0.95, 
+                  y: 0,
+                  transition: { 
+                    type: "spring", 
+                    stiffness: 400, 
+                    damping: 10 
+                  }
+                }}
+              >
+                {/* Glow effect on hover */}
+                <motion.div
+                  className="absolute inset-0 rounded-xl bg-gradient-to-r from-amber-400/20 to-amber-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                  initial={{ opacity: 0 }}
+                  whileHover={{ opacity: 1 }}
                 />
-                <Label 
-                  htmlFor="exportFormat" 
-                  className="text-gray-100 font-medium select-none cursor-pointer"
-                >
-                  Export for iField (CSV)
-                </Label>
-              </div>
+                
+                {/* Animated border glow */}
+                <motion.div
+                  className="absolute inset-0 rounded-xl bg-gradient-to-r from-amber-400/40 via-amber-500/40 to-amber-400/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                  initial={{ opacity: 0 }}
+                  whileHover={{ opacity: 1 }}
+                  animate={{
+                    background: [
+                      "linear-gradient(45deg, rgba(245, 158, 11, 0.4), rgba(245, 158, 11, 0.4))",
+                      "linear-gradient(45deg, rgba(245, 158, 11, 0.4), rgba(217, 119, 6, 0.4), rgba(245, 158, 11, 0.4))",
+                      "linear-gradient(45deg, rgba(245, 158, 11, 0.4), rgba(245, 158, 11, 0.4))"
+                    ]
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                />
 
-              <div className="relative w-full flex justify-center mt-4 gap-4">
-                <motion.button
-                  onClick={() => fileInputRef.current?.click()}
-                  animate={status}
-                  variants={buttonVariants}
-                  className={cn(
-                    "group relative grid overflow-hidden rounded-full px-6 py-2 transition-all duration-200 cursor-pointer",
-                    "hover:shadow-lg",
-                    "bg-gray-900 hover:bg-gray-800"
-                  )}
-                  style={{ minWidth: "150px" }}
-                  whileHover={status === "idle" ? { scale: 1.05 } : {}}
-                  whileTap={status === "idle" ? { scale: 0.95 } : {}}
-                >
-                  {status === "idle" && (
-                    <span
-                      className={cn(
-                        "spark mask-gradient absolute inset-0 h-[100%] w-[100%] animate-flip overflow-hidden rounded-full",
-                        "[mask:linear-gradient(white,_transparent_50%)] before:absolute before:aspect-square before:w-[200%] before:bg-[conic-gradient(from_0deg,transparent_0_340deg,white_360deg)]",
-                        "before:rotate-[-90deg] before:animate-rotate",
-                        "before:content-[''] before:[inset:0_auto_auto_50%] before:[translate:-50%_-15%]",
-                      )}
-                    />
-                  )}
+                {status === "idle" && (
                   <span
                     className={cn(
-                      "backdrop absolute inset-px rounded-[22px] transition-colors duration-200",
-                      status === "idle" ? "bg-gray-900/90 group-hover:bg-gray-800/90" : "",
+                      "spark mask-gradient absolute inset-0 h-[100%] w-[100%] animate-flip overflow-hidden rounded-xl",
+                      "[mask:linear-gradient(white,_transparent_50%)] before:absolute before:aspect-square before:w-[200%] before:bg-[conic-gradient(from_0deg,transparent_0_340deg,white_360deg)]",
+                      "before:rotate-[-90deg] before:animate-rotate",
+                      "before:content-[''] before:[inset:0_auto_auto_50%] before:[translate:-50%_-15%]",
                     )}
                   />
-                  <span className="z-10 flex items-center justify-center gap-2 text-sm font-medium text-gray-200">
-                    <AnimatePresence mode="wait">
-                      {status === "saving" && (
-                        <motion.span
-                          key="saving"
-                          initial={{ opacity: 0, rotate: 0 }}
-                          animate={{ opacity: 1, rotate: 360 }}
-                          exit={{ opacity: 0 }}
-                          transition={{
-                            duration: 0.3,
-                            rotate: { repeat: Number.POSITIVE_INFINITY, duration: 1, ease: "linear" },
-                          }}
-                        >
-                          <Loader2 className="w-4 h-4" />
-                        </motion.span>
-                      )}
-                      {status === "saved" && (
-                        <motion.span
-                          key="saved"
-                          initial={{ opacity: 0, scale: 0.5 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0 }}
-                        >
-                          <Check className="w-4 h-4" />
-                        </motion.span>
-                      )}
-                    </AnimatePresence>
-                    <motion.span
-                      key={status}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.2 }}
-                      className="flex items-center gap-2"
-                    >
-                      {status === "idle" && <Upload className="w-4 h-4" />}
-                      {status === "idle" ? "Upload package" : status === "saving" ? "Processing..." : "Saved!"}
-                    </motion.span>
-                  </span>
-                </motion.button>
-
-                <AnimatePresence>
-                  {bounce && (
-                    <motion.div
-                      className="absolute top-0 right-0 -mr-1 -mt-1"
-                      initial="initial"
-                      animate="animate"
-                      exit="exit"
-                      variants={sparkleVariants}
-                    >
-                      <Sparkles className="w-6 h-6 text-yellow-400" />
-                    </motion.div>
+                )}
+                <span
+                  className={cn(
+                    "backdrop absolute inset-px rounded-[22px] transition-colors duration-200",
+                    status === "idle" ? "bg-amber-600/80 group-hover:bg-amber-600" : "",
                   )}
-                </AnimatePresence>
-              </div>
+                />
+                <span className="z-10 flex items-center justify-center gap-2 text-lg font-semibold text-gray-200">
+                  <AnimatePresence mode="wait">
+                    {status === "saving" && (
+                      <motion.span
+                        key="saving"
+                        initial={{ opacity: 0, rotate: 0 }}
+                        animate={{ opacity: 1, rotate: 360 }}
+                        exit={{ opacity: 0 }}
+                        transition={{
+                          duration: 0.3,
+                          rotate: { repeat: Number.POSITIVE_INFINITY, duration: 1, ease: "linear" },
+                        }}
+                      >
+                        <Loader2 className="w-6 h-6" />
+                      </motion.span>
+                    )}
+                    {status === "saved" && (
+                      <motion.span
+                        key="saved"
+                        initial={{ opacity: 0, scale: 0.5 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0 }}
+                      >
+                        <Check className="w-6 h-6" />
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                  <motion.span
+                    key={status}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                    className="flex items-center gap-2"
+                  >
+                    {status === "idle" && (
+                      <motion.div
+                        whileHover={{ 
+                          rotate: [0, -10, 10, 0],
+                          transition: { duration: 0.3 }
+                        }}
+                      >
+                        <Upload className="w-6 h-6" />
+                      </motion.div>
+                    )}
+                    {status === "idle" ? "Upload Package" : status === "saving" ? "Processing..." : "Exported!"}
+                  </motion.span>
+                </span>
+              </motion.button>
+
+              <AnimatePresence>
+                {bounce && (
+                  <motion.div
+                    className="absolute top-0 right-0 -mr-1 -mt-1"
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    variants={sparkleVariants}
+                  >
+                    <Sparkles className="w-6 h-6 text-yellow-400" />
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
+
+            {/* Instructions */}
+            <div className="mt-4 text-center">
+              <p className="text-sm text-gray-400 mb-2">
+                Supported format: <span className="text-gray-300 font-medium">.xlsx</span>
+              </p>
+              <p className="text-xs text-gray-500">
+                Drag and drop your Excel file or click to browse
+              </p>
+            </div>
+          </div>
+
+          {/* Quick Actions - Tertiary Priority */}
+          <div className="flex justify-center">
+            <motion.button
+              onClick={() => window.open("https://ipsosgroup.sharepoint.com/teams/MSU-COKE-SmallMarketSolution-TEAM/Shared%20Documents/Forms/AllItems.aspx?id=%2Fteams%2FMSU%2DCOKE%2DSmallMarketSolution%2DTEAM%2FShared%20Documents%2FGeneral%2FOPS%5FFILES&viewid=ff457430%2D3660%2D48e3%2Da7f5%2D9a7de8a333cb", "_blank")}
+              className="flex items-center gap-2 px-3 py-2 bg-gray-700/30 hover:bg-gray-600/40 text-gray-300 hover:text-gray-200 rounded-lg transition-all duration-200 border border-gray-600/20 text-xs"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <FolderOpen className="w-3.5 h-3.5" />
+              <span className="font-medium">Open Packages Directory</span>
+            </motion.button>
           </div>
         </div>
       </div>
