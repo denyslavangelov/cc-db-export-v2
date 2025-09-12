@@ -206,13 +206,11 @@ const defaultChecklist: ChecklistItem[] = [
 export default function Checklist() {
   const [checklist, setChecklist] = useState<ChecklistItem[]>(defaultChecklist)
   const [progress, setProgress] = useState(0)
-  const [selectedPlatform, setSelectedPlatform] = useState<string>("All")
+  const [selectedPlatform, setSelectedPlatform] = useState<string>("iField")
   const [mounted, setMounted] = useState(false)
 
   // Filter items based on selected platform
   const filterItemsByPlatform = useCallback((items: ChecklistItem[]): ChecklistItem[] => {
-    if (selectedPlatform === "All") return items
-    
     return items.filter(item => {
       // Check if this item matches the platform
       const itemMatches = item.platform === selectedPlatform || 
@@ -452,18 +450,6 @@ export default function Checklist() {
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium text-gray-300">Filter:</span>
                 <motion.button
-                  onClick={() => setSelectedPlatform("All")}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                    selectedPlatform === "All"
-                      ? 'bg-emerald-600 text-white'
-                      : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50'
-                  }`}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  All
-                </motion.button>
-                <motion.button
                   onClick={() => setSelectedPlatform("iField")}
                   className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                     selectedPlatform === "iField"
@@ -499,40 +485,9 @@ export default function Checklist() {
                 <span className="text-sm font-medium">Reset All</span>
               </motion.button>
               
-              <motion.button
-                onClick={() => {
-                  if (confirm('This will restore platform data and fix filtering issues. Continue?')) {
-                    setChecklist(defaultChecklist)
-                    localStorage.setItem('coca-cola-checklist', JSON.stringify(defaultChecklist))
-                  }
-                }}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-700/50 hover:bg-blue-600/50 text-blue-300 hover:text-blue-200 rounded-lg transition-all duration-200 border border-blue-600/30"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <CheckCircle2 className="w-4 h-4" />
-                <span className="text-sm font-medium">Fix Platforms</span>
-              </motion.button>
             </div>
           </div>
 
-          {/* Filter Info */}
-          {selectedPlatform !== "All" && (
-            <div className={`mb-4 p-3 rounded-lg ${
-              selectedPlatform === "iField" ? "bg-orange-500/20 border border-orange-500/30" :
-              selectedPlatform === "Dimensions Only" ? "bg-blue-500/20 border border-blue-500/30" :
-              "bg-emerald-500/20 border border-emerald-500/30"
-            }`}>
-              <p className={`text-sm ${
-                selectedPlatform === "iField" ? "text-orange-300" :
-                selectedPlatform === "Dimensions Only" ? "text-blue-300" :
-                "text-emerald-300"
-              }`}>
-                Showing items for platform: <span className="font-semibold">{selectedPlatform}</span>
-                {selectedPlatform === "iField" || selectedPlatform === "Dimensions Only" ? " (including 'Both' items)" : ""}
-              </p>
-            </div>
-          )}
 
           {/* Checklist Items */}
           <div className="space-y-2">
