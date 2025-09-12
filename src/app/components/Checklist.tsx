@@ -270,7 +270,15 @@ export default function Checklist() {
     setMounted(true)
     const savedChecklist = localStorage.getItem('coca-cola-checklist')
     if (savedChecklist) {
-      setChecklist(JSON.parse(savedChecklist))
+      const parsedChecklist = JSON.parse(savedChecklist)
+      // Check if platform data exists
+      const hasPlatformData = parsedChecklist.some((item: any) => item.platform)
+      if (!hasPlatformData) {
+        // No platform data found, use default checklist
+        setChecklist(defaultChecklist)
+      } else {
+        setChecklist(parsedChecklist)
+      }
     }
   }, [])
 
@@ -303,8 +311,10 @@ export default function Checklist() {
   }
 
   const resetChecklist = () => {
-    if (confirm('Are you sure you want to reset the entire checklist? This will uncheck all items.')) {
+    if (confirm('Are you sure you want to reset the entire checklist? This will uncheck all items and restore platform data.')) {
       setChecklist(defaultChecklist)
+      // Clear localStorage to ensure fresh start
+      localStorage.removeItem('coca-cola-checklist')
     }
   }
 
@@ -488,6 +498,21 @@ export default function Checklist() {
                 <RotateCcw className="w-4 h-4" />
                 <span className="text-sm font-medium">Reset All</span>
               </motion.button>
+              
+              <motion.button
+                onClick={() => {
+                  if (confirm('This will restore platform data and fix filtering issues. Continue?')) {
+                    setChecklist(defaultChecklist)
+                    localStorage.setItem('coca-cola-checklist', JSON.stringify(defaultChecklist))
+                  }
+                }}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-700/50 hover:bg-blue-600/50 text-blue-300 hover:text-blue-200 rounded-lg transition-all duration-200 border border-blue-600/30"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                <span className="text-sm font-medium">Fix Platforms</span>
+              </motion.button>
             </div>
           </div>
 
@@ -505,15 +530,6 @@ export default function Checklist() {
               }`}>
                 Showing items for platform: <span className="font-semibold">{selectedPlatform}</span>
                 {selectedPlatform === "iField" || selectedPlatform === "Dimensions Only" ? " (including 'Both' items)" : ""}
-              </p>
-              <p className={`text-xs mt-1 ${
-                selectedPlatform === "iField" ? "text-orange-200" :
-                selectedPlatform === "Dimensions Only" ? "text-blue-200" :
-                "text-emerald-200"
-              }`}>
-                Debug: Found {filteredChecklist.length} items (Total: {checklist.length})
-                <br />
-                Platforms in data: {[...new Set(checklist.map(item => item.platform))].join(', ')}
               </p>
             </div>
           )}
