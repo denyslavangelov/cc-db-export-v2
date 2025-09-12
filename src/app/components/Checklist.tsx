@@ -12,142 +12,192 @@ interface ChecklistItem {
   id: string
   text: string
   checked: boolean
+  platform: string
   subItems?: ChecklistItem[]
 }
 
 const defaultChecklist: ChecklistItem[] = [
   {
     id: "1",
-    text: "Update the IIS Shell",
-    checked: false
+    text: "Transfer / Upload Images / DBs",
+    checked: false,
+    platform: "iField"
   },
   {
     id: "2",
-    text: "Adjustments to the default shell:",
+    text: "Update the IIS Shell",
     checked: false,
-    subItems: [
-      {
-        id: "2.1",
-        text: "Comment out `page_age.Ask()`",
-        checked: false
-      },
-      {
-        id: "2.2",
-        text: "Comment out `resp_gender.Ask()`",
-        checked: false
-      },
-      {
-        id: "2.3",
-        text: "Increase `MaxOpCodesExecuted` to **200,000** (default is 20,000)",
-        checked: false
-      },
-      {
-        id: "2.4",
-        text: "Comment out `ReturnCode = 'CF'`",
-        checked: false
-      }
-    ]
+    platform: "Dimensions Only"
   },
   {
     id: "3",
-    text: "Update the lists:",
+    text: "Adjustments to the default shell:",
     checked: false,
+    platform: "Dimensions Only",
     subItems: [
       {
         id: "3.1",
-        text: "Download the **WaveDetails** Excel file from SharePoint",
-        checked: false
+        text: "Comment out `page_age.Ask()`",
+        checked: false,
+        platform: "Dimensions Only"
       },
       {
         id: "3.2",
-        text: "Export the lists using the **CCDB Export Tool**",
-        checked: false
+        text: "Comment out `resp_gender.Ask()`",
+        checked: false,
+        platform: "Dimensions Only"
       },
       {
         id: "3.3",
-        text: "Copy & paste the lists from the exported file into your **mdd**",
-        checked: false
+        text: "Increase `MaxOpCodesExecuted` to **200,000** (default is 20,000)",
+        checked: false,
+        platform: "Dimensions Only"
+      },
+      {
+        id: "3.4",
+        text: "Comment out `ReturnCode = 'CF'`",
+        checked: false,
+        platform: "Dimensions Only"
       }
     ]
   },
   {
     id: "4",
-    text: "Update country-specific questions:",
+    text: "Update the lists:",
     checked: false,
+    platform: "Both",
     subItems: [
       {
         id: "4.1",
-        text: "Update the **REGION_SUMMARY** page with country-specific region questions",
-        checked: false
+        text: "Download the **WaveDetails** Excel file from SharePoint",
+        checked: false,
+        platform: "Both"
       },
       {
         id: "4.2",
-        text: "Update the categories of **INCOME_LIST** using the **Country Specific Questions Excel**",
-        checked: false
+        text: "Export the lists using the **CCDB Export Tool**",
+        checked: false,
+        platform: "Both"
       },
       {
         id: "4.3",
-        text: "Update the **EDUCATION** categories using the same approach",
-        checked: false
+        text: "Copy & paste the lists from the exported file into your **mdd**",
+        checked: false,
+        platform: "Both"
+      }
+    ]
+  },
+  {
+    id: "5",
+    text: "Update country-specific questions:",
+    checked: false,
+    platform: "Both",
+    subItems: [
+      {
+        id: "5.1",
+        text: "Regions (no QMKTSIZE module)",
+        checked: false,
+        platform: "iField"
       },
       {
-        id: "4.4",
+        id: "5.2",
+        text: "Update the **REGION_SUMMARY** page with country-specific region questions",
+        checked: false,
+        platform: "Dimensions Only"
+      },
+      {
+        id: "5.3",
+        text: "Update the categories of **INCOME_LIST** using the **Country Specific Questions Excel**",
+        checked: false,
+        platform: "Both"
+      },
+      {
+        id: "5.4",
+        text: "Update the **EDUCATION** categories using the same approach",
+        checked: false,
+        platform: "Both"
+      },
+      {
+        id: "5.5",
         text: "Locate the **\"Country_Specific_Questions_Start\"** tag in the routing and update the following:",
         checked: false,
+        platform: "Both",
         subItems: [
           {
-            id: "4.4.1",
+            id: "5.5.1",
             text: "CultureInfo",
-            checked: false
+            checked: false,
+            platform: "CultureInfo"
           },
           {
-            id: "4.4.2",
+            id: "5.5.2",
             text: "Recode **QCOUNTRY** with the correct category (check metadata)",
-            checked: false
+            checked: false,
+            platform: "Both"
           },
           {
-            id: "4.4.3",
+            id: "5.5.3",
             text: "Update **QLANGUAGE** with correct categories (check metadata)",
-            checked: false
+            checked: false,
+            platform: "Both"
           },
           {
-            id: "4.4.4",
+            id: "5.5.4",
             text: "Update the name of the **INCOME** question (delete old version)",
-            checked: false
+            checked: false,
+            platform: "Both"
           },
           {
-            id: "4.4.5",
+            id: "5.5.5",
             text: "Update the name of the **EDUCATION** question (delete old version)",
-            checked: false
+            checked: false,
+            platform: "Both"
           },
           {
-            id: "4.4.6",
+            id: "5.5.6",
             text: "Update the income recoding (**HHINC**, from questionnaire)",
-            checked: false
+            checked: false,
+            platform: "Both"
           },
           {
-            id: "4.4.7",
+            id: "5.5.7",
             text: "Update the minimum **AGE** (from questionnaire)",
-            checked: false
+            checked: false,
+            platform: "Both"
           },
           {
-            id: "4.4.8",
+            id: "5.5.8",
             text: "Update the **AEQ** categories (**AEQ_QUALIFY**, from questionnaire)",
-            checked: false
+            checked: false,
+            platform: "Both"
           }
         ]
       }
     ]
   },
   {
-    id: "5",
+    id: "6",
+    text: "Update the questions transferred between both stages",
+    checked: false,
+    platform: "iField"
+  },
+  {
+    id: "7",
+    text: "Update custom properties",
+    checked: false,
+    platform: "iField"
+  },
+  {
+    id: "8",
     text: "Final Step: Testing",
     checked: false,
+    platform: "Both",
     subItems: [
       {
-        id: "5.1",
+        id: "8.1",
         text: "Run test cases and generate dummy data to confirm everything is working smoothly and no errors appear",
-        checked: false
+        checked: false,
+        platform: "Both"
       }
     ]
   }
@@ -156,6 +206,34 @@ const defaultChecklist: ChecklistItem[] = [
 export default function Checklist() {
   const [checklist, setChecklist] = useState<ChecklistItem[]>(defaultChecklist)
   const [progress, setProgress] = useState(0)
+  const [selectedPlatform, setSelectedPlatform] = useState<string>("All")
+
+  // Filter items based on selected platform
+  const filterItemsByPlatform = useCallback((items: ChecklistItem[]): ChecklistItem[] => {
+    if (selectedPlatform === "All") return items
+    
+    return items.map(item => {
+      const filteredItem = { ...item }
+      if (item.subItems) {
+        filteredItem.subItems = filterItemsByPlatform(item.subItems)
+      }
+      return filteredItem
+    }).filter(item => {
+      // Show item if it matches the selected platform OR if it's "Both" and we're filtering by iField or Dimensions Only
+      if (item.platform === selectedPlatform) return true
+      if (item.platform === "Both" && (selectedPlatform === "iField" || selectedPlatform === "Dimensions Only")) return true
+      if (item.subItems && item.subItems.length > 0) {
+        // Keep parent item if any sub-item matches the platform or is "Both"
+        return item.subItems.some(subItem => 
+          subItem.platform === selectedPlatform || 
+          (subItem.platform === "Both" && (selectedPlatform === "iField" || selectedPlatform === "Dimensions Only"))
+        )
+      }
+      return false
+    })
+  }, [selectedPlatform])
+
+  const filteredChecklist = filterItemsByPlatform(checklist)
 
   const countTotalItems = useCallback((items: ChecklistItem[]): number => {
     let count = items.length
@@ -179,10 +257,11 @@ export default function Checklist() {
   }, [])
 
   const calculateProgress = useCallback(() => {
-    const totalItems = countTotalItems(checklist)
-    const checkedItems = countCheckedItems(checklist)
-    setProgress(Math.round((checkedItems / totalItems) * 100))
-  }, [checklist, countTotalItems, countCheckedItems])
+    const totalItems = countTotalItems(filteredChecklist)
+    const checkedItems = countCheckedItems(filteredChecklist)
+    setProgress(totalItems > 0 ? Math.round((checkedItems / totalItems) * 100) : 0)
+  }, [filteredChecklist, countTotalItems, countCheckedItems])
+
 
   // Load checklist from localStorage on component mount
   useEffect(() => {
@@ -195,8 +274,12 @@ export default function Checklist() {
   // Save checklist to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('coca-cola-checklist', JSON.stringify(checklist))
+  }, [checklist])
+
+  // Recalculate progress when checklist or filter changes
+  useEffect(() => {
     calculateProgress()
-  }, [checklist, calculateProgress])
+  }, [calculateProgress])
 
   const toggleItem = (id: string, items: ChecklistItem[]): ChecklistItem[] => {
     return items.map(item => {
@@ -248,15 +331,29 @@ export default function Checklist() {
           </div>
           
           <div className="flex-1">
-            <span 
-              className={cn(
-                "text-sm font-medium transition-all duration-200",
-                isMainItem ? "text-gray-100" : "text-gray-200",
-                item.checked ? "line-through text-gray-400" : ""
-              )}
-            >
-              {item.text}
-            </span>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span 
+                className={cn(
+                  "text-sm font-medium transition-all duration-200",
+                  isMainItem ? "text-gray-100" : "text-gray-200",
+                  item.checked ? "line-through text-gray-400" : ""
+                )}
+              >
+                {item.text}
+              </span>
+              <span 
+                className={cn(
+                  "px-2 py-1 rounded-full text-xs font-medium",
+                  item.platform === "Dimensions Only" ? "bg-blue-500/20 text-blue-300 border border-blue-500/30" :
+                  item.platform === "Both" ? "bg-purple-500/20 text-purple-300 border border-purple-500/30" :
+                  item.platform === "iField" ? "bg-orange-500/20 text-orange-300 border border-orange-500/30" :
+                  item.platform === "CultureInfo" ? "bg-green-500/20 text-green-300 border border-green-500/30" :
+                  "bg-gray-500/20 text-gray-300 border border-gray-500/30"
+                )}
+              >
+                {item.platform}
+              </span>
+            </div>
           </div>
         </motion.div>
 
@@ -314,22 +411,95 @@ export default function Checklist() {
           "border border-gray-700/30"
         )}>
           {/* Action Bar */}
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
             <h2 className="text-xl font-semibold text-gray-100">Checklist Items</h2>
-            <motion.button
-              onClick={resetChecklist}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-700/50 hover:bg-gray-600/50 text-gray-300 hover:text-gray-200 rounded-lg transition-all duration-200 border border-gray-600/30"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <RotateCcw className="w-4 h-4" />
-              <span className="text-sm font-medium">Reset All</span>
-            </motion.button>
+            <div className="flex items-center gap-4">
+              {/* Platform Filter Buttons */}
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-300">Filter:</span>
+                <motion.button
+                  onClick={() => setSelectedPlatform("All")}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    selectedPlatform === "All"
+                      ? 'bg-emerald-600 text-white'
+                      : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50'
+                  }`}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  All
+                </motion.button>
+                <motion.button
+                  onClick={() => setSelectedPlatform("iField")}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    selectedPlatform === "iField"
+                      ? 'bg-orange-600 text-white'
+                      : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50'
+                  }`}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  iField
+                </motion.button>
+                <motion.button
+                  onClick={() => setSelectedPlatform("Dimensions Only")}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    selectedPlatform === "Dimensions Only"
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50'
+                  }`}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  Dimensions
+                </motion.button>
+              </div>
+              
+              <motion.button
+                onClick={resetChecklist}
+                className="flex items-center gap-2 px-4 py-2 bg-gray-700/50 hover:bg-gray-600/50 text-gray-300 hover:text-gray-200 rounded-lg transition-all duration-200 border border-gray-600/30"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <RotateCcw className="w-4 h-4" />
+                <span className="text-sm font-medium">Reset All</span>
+              </motion.button>
+            </div>
           </div>
+
+          {/* Filter Info */}
+          {selectedPlatform !== "All" && (
+            <div className={`mb-4 p-3 rounded-lg ${
+              selectedPlatform === "iField" ? "bg-orange-500/20 border border-orange-500/30" :
+              selectedPlatform === "Dimensions Only" ? "bg-blue-500/20 border border-blue-500/30" :
+              "bg-emerald-500/20 border border-emerald-500/30"
+            }`}>
+              <p className={`text-sm ${
+                selectedPlatform === "iField" ? "text-orange-300" :
+                selectedPlatform === "Dimensions Only" ? "text-blue-300" :
+                "text-emerald-300"
+              }`}>
+                Showing items for platform: <span className="font-semibold">{selectedPlatform}</span>
+                {selectedPlatform === "iField" || selectedPlatform === "Dimensions Only" ? " (including 'Both' items)" : ""}
+              </p>
+            </div>
+          )}
 
           {/* Checklist Items */}
           <div className="space-y-2">
-            {checklist.map(item => renderChecklistItem(item))}
+            {filteredChecklist.length === 0 ? (
+              <div className="text-center py-8">
+                <div className="p-6 bg-gray-700/30 rounded-2xl border-2 border-dashed border-gray-600/50">
+                  <CheckCircle2 className="w-12 h-12 text-gray-500 mx-auto mb-3" />
+                  <h3 className="text-lg font-semibold text-gray-300 mb-1">
+                    No items found for {selectedPlatform}
+                  </h3>
+                  <p className="text-gray-400 text-sm">Try selecting a different platform or "All Platforms"</p>
+                </div>
+              </div>
+            ) : (
+              filteredChecklist.map(item => renderChecklistItem(item))
+            )}
           </div>
 
           {/* Completion Message */}
