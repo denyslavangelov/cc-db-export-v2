@@ -213,24 +213,25 @@ export default function Checklist() {
   const filterItemsByPlatform = useCallback((items: ChecklistItem[]): ChecklistItem[] => {
     if (selectedPlatform === "All") return items
     
-    return items.map(item => {
-      const filteredItem = { ...item }
+    return items.filter(item => {
+      // Check if this item matches the platform
+      const itemMatches = item.platform === selectedPlatform || 
+        (item.platform === "Both" && (selectedPlatform === "iField" || selectedPlatform === "Dimensions Only"))
+      
+      // Check if any sub-items match
+      const subItemsMatch = item.subItems && item.subItems.some(subItem => 
+        subItem.platform === selectedPlatform || 
+        (subItem.platform === "Both" && (selectedPlatform === "iField" || selectedPlatform === "Dimensions Only"))
+      )
+      
+      return itemMatches || subItemsMatch
+    }).map(item => {
+      // If item has sub-items, filter them recursively
       if (item.subItems) {
-        filteredItem.subItems = filterItemsByPlatform(item.subItems)
+        const filteredSubItems = filterItemsByPlatform(item.subItems)
+        return { ...item, subItems: filteredSubItems }
       }
-      return filteredItem
-    }).filter(item => {
-      // Show item if it matches the selected platform OR if it's "Both" and we're filtering by iField or Dimensions Only
-      if (item.platform === selectedPlatform) return true
-      if (item.platform === "Both" && (selectedPlatform === "iField" || selectedPlatform === "Dimensions Only")) return true
-      if (item.subItems && item.subItems.length > 0) {
-        // Keep parent item if any sub-item matches the platform or is "Both"
-        return item.subItems.some(subItem => 
-          subItem.platform === selectedPlatform || 
-          (subItem.platform === "Both" && (selectedPlatform === "iField" || selectedPlatform === "Dimensions Only"))
-        )
-      }
-      return false
+      return item
     })
   }, [selectedPlatform])
 
@@ -504,6 +505,15 @@ export default function Checklist() {
               }`}>
                 Showing items for platform: <span className="font-semibold">{selectedPlatform}</span>
                 {selectedPlatform === "iField" || selectedPlatform === "Dimensions Only" ? " (including 'Both' items)" : ""}
+              </p>
+              <p className={`text-xs mt-1 ${
+                selectedPlatform === "iField" ? "text-orange-200" :
+                selectedPlatform === "Dimensions Only" ? "text-blue-200" :
+                "text-emerald-200"
+              }`}>
+                Debug: Found {filteredChecklist.length} items (Total: {checklist.length})
+                <br />
+                Platforms in data: {[...new Set(checklist.map(item => item.platform))].join(', ')}
               </p>
             </div>
           )}
