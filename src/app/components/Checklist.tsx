@@ -207,6 +207,7 @@ export default function Checklist() {
   const [checklist, setChecklist] = useState<ChecklistItem[]>(defaultChecklist)
   const [progress, setProgress] = useState(0)
   const [selectedPlatform, setSelectedPlatform] = useState<string>("All")
+  const [mounted, setMounted] = useState(false)
 
   // Filter items based on selected platform
   const filterItemsByPlatform = useCallback((items: ChecklistItem[]): ChecklistItem[] => {
@@ -263,18 +264,21 @@ export default function Checklist() {
   }, [filteredChecklist, countTotalItems, countCheckedItems])
 
 
-  // Load checklist from localStorage on component mount
+  // Handle client-side mounting and localStorage
   useEffect(() => {
+    setMounted(true)
     const savedChecklist = localStorage.getItem('coca-cola-checklist')
     if (savedChecklist) {
       setChecklist(JSON.parse(savedChecklist))
     }
   }, [])
 
-  // Save checklist to localStorage whenever it changes
+  // Save checklist to localStorage whenever it changes (only after mounting)
   useEffect(() => {
-    localStorage.setItem('coca-cola-checklist', JSON.stringify(checklist))
-  }, [checklist])
+    if (mounted) {
+      localStorage.setItem('coca-cola-checklist', JSON.stringify(checklist))
+    }
+  }, [checklist, mounted])
 
   // Recalculate progress when checklist or filter changes
   useEffect(() => {
@@ -362,6 +366,25 @@ export default function Checklist() {
             {item.subItems!.map(subItem => renderChecklistItem(subItem, level + 1))}
           </div>
         )}
+      </div>
+    )
+  }
+
+  // Prevent hydration mismatch by not rendering until mounted
+  if (!mounted) {
+    return (
+      <div className={cn(
+        "min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900",
+        geologica.className
+      )}>
+        <div className="w-full max-w-4xl p-4 mx-auto pt-6">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-400 mx-auto mb-4"></div>
+              <p className="text-gray-400">Loading checklist...</p>
+            </div>
+          </div>
+        </div>
       </div>
     )
   }
