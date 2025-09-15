@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
-import { CheckSquare, Square, RotateCcw, FileText, CheckCircle2 } from 'lucide-react'
+import { CheckSquare, Square, RotateCcw, FileText, CheckCircle2, Play, ExternalLink } from 'lucide-react'
 import { cn } from '@/app/utils/cn'
 import { Geologica } from 'next/font/google'
 
@@ -316,6 +316,8 @@ export default function Checklist() {
     }
   }
 
+
+
   const renderChecklistItem = (item: ChecklistItem, level: number = 0) => {
     const hasSubItems = item.subItems && item.subItems.length > 0
     const isMainItem = level === 0
@@ -414,9 +416,33 @@ export default function Checklist() {
           <h1 className="text-4xl font-bold text-gray-100 tracking-tight mb-2">
             COCA COLA - Scripting Checklist
           </h1>
-          <p className="text-base text-gray-400 tracking-wide mb-3">
+          <p className="text-base text-gray-400 tracking-wide mb-4">
             New Market Checklist
           </p>
+          
+          {/* Video Link Section */}
+          <div className="bg-gray-800/40 border border-gray-600/30 rounded-lg p-4 mb-6">
+            <div className="flex items-center justify-between">
+              <div className="text-left">
+                <h2 className="text-base font-medium text-gray-200 mb-1">
+                  Setup Video
+                </h2>
+                <p className="text-sm text-gray-400">
+                  Watch before starting the checklist
+                </p>
+              </div>
+              <a
+                href="https://ipsosgroup-my.sharepoint.com/personal/yoana_radneva_ipsos_com/_layouts/15/stream.aspx?id=%2Fpersonal%2Fyoana%5Fradneva%5Fipsos%5Fcom%2FDocuments%2FCoke%20Program%20%2D%20All%20SD%5FQA%2FiField%2FCoke%20iFiled%20%2D%20Scripting%20set%20up%20market%2Emp4&referrer=StreamWebApp%2EWeb&referrerScenario=AddressBarCopied%2Eview%2Eef904c5c%2Dfd0e%2D4014%2Da1fa%2De7aa79221b3f&isDarkMode=true"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-4 py-2 bg-orange-500/20 text-orange-300 border border-orange-500/30 rounded-md transition-colors text-sm hover:bg-orange-500/30"
+              >
+                <Play className="w-4 h-4" />
+                <span>Watch Video</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
+          </div>
         </div>
 
         {/* Progress Bar */}
@@ -520,6 +546,7 @@ export default function Checklist() {
           )}
         </div>
       </div>
+
     </div>
   )
 }
