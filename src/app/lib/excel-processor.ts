@@ -2,6 +2,7 @@ import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import JSZip from 'jszip';
 import { CountryCodes, ExcelData, ProcessedData } from "@/app/types";
+import type { FamilyBrandsSheetRow, EducationListSheetRow, IncomeListSheetRow } from "@/app/lib/country-questions-workbook";
 import { toast } from "sonner";
 
 // Function to get ISO country code from country name
@@ -95,7 +96,15 @@ interface DiaryCategory {
   containerCodes?: string;
 }
 
-export async function processExcelFile(file: File, exportInXlsx: boolean = false): Promise<void> {
+export async function processExcelFile(
+  file: File,
+  exportInXlsx: boolean = false,
+  familyBrandsSheetRows?: FamilyBrandsSheetRow[],
+  educationListSheetRows?: EducationListSheetRow[],
+  incomeListSheetRows?: IncomeListSheetRow[],
+  updatedMddContent?: string | null,
+  mddFileName?: string
+): Promise<void> {
   try {
     const data = await readExcelFile(file);
     const indexSheet = data.INDEX[4]; // Row 10 (0-based)
@@ -112,7 +121,7 @@ export async function processExcelFile(file: File, exportInXlsx: boolean = false
 
     const processedData = processSheets(data, isoCode);
     
-    await generateExportFiles(processedData, countryName, isoCode, exportInXlsx);
+    await generateExportFiles(processedData, countryName, isoCode, exportInXlsx, familyBrandsSheetRows, educationListSheetRows, incomeListSheetRows, updatedMddContent, mddFileName);
     return Promise.resolve();
   } catch (error: any) {
     console.error('Error processing Excel file:', error);
@@ -427,7 +436,17 @@ function createImagesList(brandList: string[]): any[] {
   return finalRows;
 }
 
-async function generateExportFiles(data: ProcessedData, countryName: string, isoCode: string, exportInXlsx: boolean): Promise<void> {
+async function generateExportFiles(
+  data: ProcessedData,
+  countryName: string,
+  isoCode: string,
+  exportInXlsx: boolean,
+  familyBrandsSheetRows?: FamilyBrandsSheetRow[],
+  educationListSheetRows?: EducationListSheetRow[],
+  incomeListSheetRows?: IncomeListSheetRow[],
+  updatedMddContent?: string | null,
+  mddFileName?: string
+): Promise<void> {
   try {
     const zip = new JSZip();
     
@@ -507,21 +526,41 @@ async function generateExportFiles(data: ProcessedData, countryName: string, iso
         XLSX.utils.book_append_sheet(combinedWorkbook, ws, file.sheetName);
       }
       
+      // Add Family Brands sheet (CC_PACKAGE format: Text, Object Name, Extended Properties with subFamilyBrands)
+      if (familyBrandsSheetRows && familyBrandsSheetRows.length > 0) {
+        const familyBrandsWs = XLSX.utils.json_to_sheet(familyBrandsSheetRows);
+        XLSX.utils.book_append_sheet(combinedWorkbook, familyBrandsWs, 'FAMILY_BRANDS_LIST');
+      }
+      
+      // Add EDUCATION_LIST sheet (CC_PACKAGE format: Text, Object Name)
+      if (educationListSheetRows && educationListSheetRows.length > 0) {
+        const educationListWs = XLSX.utils.json_to_sheet(educationListSheetRows);
+        XLSX.utils.book_append_sheet(combinedWorkbook, educationListWs, 'EDUCATION_LIST');
+      }
+      
+      // Add INCOME_LIST sheet (CC_PACKAGE format: Text, Object Name)
+      if (incomeListSheetRows && incomeListSheetRows.length > 0) {
+        const incomeListWs = XLSX.utils.json_to_sheet(incomeListSheetRows);
+        XLSX.utils.book_append_sheet(combinedWorkbook, incomeListWs, 'INCOME_LIST');
+      }
+      
       // Generate the combined Excel file
       const combinedExcelBuffer = XLSX.write(combinedWorkbook, { bookType: 'xlsx', type: 'array' });
       
       // Save the Excel file directly (not in a zip)
       const excelBlob = new Blob([combinedExcelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-      saveAs(excelBlob, `CC_PACKAGE_EXPORT_${countryName.toUpperCase()}_IFIELD.xlsx`);
+      saveAs(excelBlob, `CC_LISTS_EXPORT_${countryName.toUpperCase()}_IFIELD.xlsx`);
     } else {
       // For DIMENSIONS format, create text files
       for (const file of textFiles) {
         zip.file(file.name, file.content.join('\n'));
       }
-      
+      if (updatedMddContent) {
+        zip.file(mddFileName || 'Survey.mdd', updatedMddContent);
+      }
       // Generate and save the zip file with text files
-    const zipBlob = await zip.generateAsync({ type: 'blob' });
-      saveAs(zipBlob, `CC_PACKAGE_EXPORT_${countryName.toUpperCase()}_DIMENSIONS.zip`);
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      saveAs(zipBlob, `CC_LISTS_EXPORT_${countryName.toUpperCase()}_DIMENSIONS.zip`);
     }
   } catch (error: any) {
     console.error('Error generating export files:', error);
