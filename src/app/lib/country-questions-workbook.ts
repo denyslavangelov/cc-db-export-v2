@@ -116,7 +116,7 @@ function toInt(val: unknown): number | null {
 }
 
 /** Normalize header for matching: trim, collapse spaces, remove "Unnamed" columns */
-function normHeader(h: string): string {
+function normHeader(h: unknown): string {
   return String(h ?? '')
     .trim()
     .replace(/\s+/g, ' ')
